@@ -7,6 +7,7 @@
 
 ---
 
+📎 **[Click here to download WorkGuard360 Pitch Deck (PPTX)](sandbox:/mnt/data/WorkGuard360-PitchDeck.pptx)**
 ## 🌟 Demo Access (MVP)
 
 | Role     | Email                          | Password   |
