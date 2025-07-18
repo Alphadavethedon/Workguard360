@@ -6,17 +6,6 @@
 > 🌍 Built in Nairobi. Designed for the enterprise. Ready to scale across Africa and beyond.
 
 ---
-Your pitch deck is now ready to download and share:
-
-📎 **[Click here to download WorkGuard360 Pitch Deck (PPTX)](sandbox:/mnt/data/WorkGuard360-PitchDeck.pptx)**
-
-> You can upload this file to GitHub, Dropbox, Google Drive, or Vercel storage to generate a permanent public URL.
-
-Would you like me to help you:
-
-* Upload it to your GitHub repo?
-* Host it on Dropbox or Google Drive and send the link to your email (**[davewabwile@gmail.com](mailto:davewabwile@gmail.com)**)?
-* Embed the link in your website or README file?
 
 ## 🌟 Demo Access (MVP)
 
