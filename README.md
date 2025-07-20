@@ -287,6 +287,7 @@ npm run lint
 ### Render Deployment
 
 1. **Create Render Account**
+<img width="1364" height="662" alt="image" src="https://github.com/user-attachments/assets/b457a536-4f50-41ca-81a5-8ae80b7b7e74" />
 
    - Sign up at [render.com](https://render.com)
 2. **Create Web Service**
