@@ -363,4 +363,4 @@ After seeding the database, use these credentials:
 
 ---
 
-**Built with ❤️ for enterprise security and compliance**
+**Built for enterprise security and compliance**
