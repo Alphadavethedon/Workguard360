@@ -1,0 +1,37 @@
+{
+  "name": "workguard360-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.11.2",
+    "express-validator": "^7.2.1",
+    "helmet": "^7.2.0",
+    "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "3.7",
+    "mongoose": "^7.8.7",
+    "morgan": "^1.10.1",
+    "pdfkit": "^0.13.0",
+    "socket.io": "^4.8.1",
+    "xss": "^1.0.14",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}

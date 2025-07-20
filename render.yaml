@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: workguard360-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      envVars:
+  - key: MONGODB_URI
+    value: mongodb+srv://davewabwile:${MONGO_PASSWORD}@workguard360.nxtscqe.mongodb.net/workguard360?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        value: your_secure_jwt_secret
+      - key: PORT
+        value: 10000
+        
