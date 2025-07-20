@@ -4,7 +4,8 @@ https://workguard360.onrender.com/
 
 A production-ready, secure, and scalable backend API for the WorkGuard360 workplace security and compliance monitoring system.
 
-<img width="1331" height="600" alt="image" src="https://github.com/user-attachments/assets/f41670cf-c9d7-4fe4-a1ee-d028740114fb" />
+<img width="1357" height="706" alt="image" src="https://github.com/user-attachments/assets/00e990ad-8ae4-4814-92c3-7f2181511aff" />
+
 
 ## 🚀 Features
 
