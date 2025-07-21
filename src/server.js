@@ -9,11 +9,9 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-
-// Load environment variables
 require('dotenv').config();
 
-// Import routes
+// Routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
@@ -23,26 +21,24 @@ const accessLogRoutes = require('./routes/accessLogs');
 const shiftRoutes = require('./routes/shifts');
 const floorRoutes = require('./routes/floors');
 
-// Import middleware
+// Middleware
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 
-// Create Express app
+// Setup
 const app = express();
 const server = createServer(app);
 
-// Socket.IO setup
+// Socket.IO setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "https://workguard360.vercel.app/",
+    origin: process.env.CLIENT_URL || "https://workguard360.vercel.app", // ✅ No trailing slash
     methods: ["GET", "POST"]
   }
 });
-
-// Make io accessible to routes
 app.set('io', io);
 
-// Security middleware
+// Helmet security
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
   contentSecurityPolicy: {
@@ -55,45 +51,41 @@ app.use(helmet({
   },
 }));
 
-// Rate limiting
+// Rate limiter
 const limiter = rateLimit({
   windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000,
   max: process.env.RATE_LIMIT_MAX || 100,
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
+  message: { error: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
-// CORS configuration
+// ✅ FIXED: CORS config
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://workguard360.vercel.app/",
+  origin: process.env.CLIENT_URL || "https://workguard360.vercel.app", // ✅ No trailing slash
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Body parsing middleware
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Data sanitization
+// Sanitization
 app.use(mongoSanitize());
 app.use(xss());
-
-// Compression middleware
 app.use(compression());
 
-// Logging middleware
+// Logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
 }
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -113,25 +105,23 @@ app.use('/api/access-logs', accessLogRoutes);
 app.use('/api/shifts', shiftRoutes);
 app.use('/api/floors', floorRoutes);
 
-// Socket.IO connection handling
+// WebSocket handlers
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  
   socket.on('join-dashboard', (userId) => {
     socket.join(`user-${userId}`);
     console.log(`User ${userId} joined dashboard room`);
   });
-  
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
-// Error handling middleware
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
-// Database connection
+// Database
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
@@ -147,10 +137,8 @@ const connectDB = async () => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-
 const startServer = async () => {
   await connectDB();
-  
   server.listen(PORT, () => {
     console.log(`🚀 WorkGuard360 API running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV}`);
@@ -158,23 +146,19 @@ const startServer = async () => {
   });
 };
 
-// Handle unhandled promise rejections
+// Graceful shutdown handlers
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  server.close(() => {
-    process.exit(1);
-  });
+  server.close(() => process.exit(1));
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   process.exit(1);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
+  console.log('SIGTERM received. Shutting down...');
   server.close(() => {
     mongoose.connection.close();
     process.exit(0);
