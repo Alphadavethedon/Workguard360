@@ -1,5 +1,11 @@
+// src/controllers/auth.controller.js
+
+const User = require('../models/user.model'); // Make sure User is imported
 const jwt = require('jsonwebtoken');
-const User = require('../models/user.model');
+
+const login = async (req, res) => {
+  // Your login logic...
+};
 
 const getMe = async (req, res) => {
   try {
@@ -16,10 +22,7 @@ const getMe = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
-  // login logic...
-};
-
+// ✅ Export both
 module.exports = {
   login,
   getMe,
