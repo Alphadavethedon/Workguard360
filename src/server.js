@@ -32,7 +32,7 @@ const server = createServer(app);
 // Socket.IO setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "https://workguard360.vercel.app", // ✅ No trailing slash
+    origin: process.env.CLIENT_URL || "https://workguard360.vercel.app",
     methods: ["GET", "POST"]
   }
 });
@@ -61,9 +61,9 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ✅ FIXED: CORS config
+// CORS config
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://workguard360.vercel.app", // ✅ No trailing slash
+  origin: process.env.CLIENT_URL || "https://workguard360.vercel.app",
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -73,7 +73,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Sanitization
+// Sanitization and compression
 app.use(mongoSanitize());
 app.use(xss());
 app.use(compression());
@@ -84,6 +84,11 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+// ✅ Root route to fix Render 404
+app.get('/', (req, res) => {
+  res.status(200).send('✅ WorkGuard360 Backend is Live');
+});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -121,7 +126,7 @@ io.on('connection', (socket) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Database
+// MongoDB connection
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
@@ -146,7 +151,7 @@ const startServer = async () => {
   });
 };
 
-// Graceful shutdown handlers
+// Graceful shutdown
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
   server.close(() => process.exit(1));
