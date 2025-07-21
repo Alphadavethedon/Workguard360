@@ -6,6 +6,8 @@ A production-ready, secure, and scalable backend API for the WorkGuard360 workpl
 
 <img width="1357" height="706" alt="image" src="https://github.com/user-attachments/assets/00e990ad-8ae4-4814-92c3-7f2181511aff" />
 
+<img width="1357" height="687" alt="image" src="https://github.com/user-attachments/assets/18584400-e529-41db-b850-3bd7a1b15d47" />
+
 
 ## 🚀 Features
 
