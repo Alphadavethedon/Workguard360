@@ -1,15 +1,8 @@
-const express = require('express');
-const corsMiddleware = require('./middleware/cors');
+import cors from 'cors';
 
-const app = express();
-
-app.use(corsMiddleware); // ✅ Enable CORS before routes
-app.use(express.json());
-
-// ... your routes
-app.use('/api/auth', require('./routes/auth.route'));
-
-// ✅ Handle unknown routes
-app.get('/', (req, res) => {
-  res.send('WorkGuard360 Backend is Live');
-});
+app.use(
+  cors({
+    origin: 'https://workguard360.vercel.app',
+    credentials: true, // ✅ Must be true to allow cookies
+  })
+);
