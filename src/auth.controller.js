@@ -9,7 +9,10 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.status(200).json({ token, user: { id: user._id, email: user.email, role: user.role } });
+    res.status(200).json({
+      token,
+      user: { id: user._id, email: user.email, role: user.role }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -23,8 +26,4 @@ exports.getCurrentUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
-};
-
-exports.logout = (req, res) => {
-  res.status(200).json({ message: 'Logged out successfully' });
 };
