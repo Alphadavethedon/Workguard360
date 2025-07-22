@@ -21,21 +21,27 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app',
-    methods: ['GET', 'POST', 'OPTIONS'], // Include OPTIONS for preflight
+    methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true
   }
 });
 
-// Enhanced CORS middleware
+// Enhanced CORS middleware with preflight handling
+app.options('*', cors());
 app.use(cors({
   origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Explicitly allow OPTIONS
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200 // Ensure preflight success
+  optionsSuccessStatus: 200
 }));
 
-// Middleware
+// Middleware for logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.headers.origin}`);
+  next();
+});
+
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
