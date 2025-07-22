@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'https://workguard360.onrender.com/api',
+  baseURL: 'https://workguard360-backend.onrender.com/api', // Updated to match current deployment
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
