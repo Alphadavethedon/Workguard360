@@ -18,6 +18,8 @@
 
 ---
 
+<img width="1349" height="623" alt="image" src="https://github.com/user-attachments/assets/e95389e5-09f8-4eba-9778-8c8f2b73bf99" />
+
 ## 🧠 Key Highlights
 
 ### 🔐 Role-Based Authentication & Access Control
