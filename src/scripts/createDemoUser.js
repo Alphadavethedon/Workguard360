@@ -8,14 +8,14 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     const password = 'demo123';
     const user = await User.findOne({ email });
     if (user) {
-      user.password = await bcrypt.hash(password, await bcrypt.genSalt(12));
+      user.password = await bcrypt.hash(password, await bcrypt.genSalt(parseInt(process.env.BCRYPT_ROUNDS) || 12));
       await user.save();
       console.log('Password updated for', email);
     } else {
       const newUser = await User.create({
         name: 'Admin User',
         email,
-        password: await bcrypt.hash(password, await bcrypt.genSalt(12)),
+        password: await bcrypt.hash(password, await bcrypt.genSalt(parseInt(process.env.BCRYPT_ROUNDS) || 12)),
         role: 'admin',
         employeeId: 'EMP001',
         department: 'Administration',
