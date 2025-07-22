@@ -178,7 +178,9 @@ MIT License — free to use, customize, and distribute.
 **Davis Wabwile**
 Full-Stack Developer · Cloud & AI Engineer
 📍 Nairobi, Kenya
+
 📧 [daviswabwile@gmail.com](mailto:daviswabwile@gmail.com)
+
 🌐 [davisportfolio.vercel.app](https://davisportfolio.vercel.app)
 
 > Let’s connect for enterprise integrations, pilot programs, or developer partnerships.
