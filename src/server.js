@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -12,28 +10,32 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-// Import your routes/middleware
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-// ... other route imports ...
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
-// Setup
 const app = express();
-app.set('trust proxy', 1); // ✅ trust proxy for rate limit
+app.set('trust proxy', 1); // Trust proxy for rate limit
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app', methods: ['GET', 'POST'] }
+  cors: {
+    origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app',
+    methods: ['GET', 'POST', 'OPTIONS'], // Include OPTIONS for preflight
+    credentials: true
+  }
 });
 
-// Middlewares
+// Enhanced CORS middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app',
   credentials: true,
-  methods: ['GET','POST','PUT','DELETE','PATCH'],
-  allowedHeaders: ['Content-Type','Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Explicitly allow OPTIONS
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200 // Ensure preflight success
 }));
+
+// Middleware
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -55,7 +57,6 @@ app.get('/health', (req, res) => res.json({ status: 'success', message: 'API run
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-// ... other routes ...
 app.use(notFound);
 app.use(errorHandler);
 
@@ -78,5 +79,3 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     console.error('DB connection error:', err);
     process.exit(1);
   });
-
-// Graceful shutdown & error handling omitted for brevity...
