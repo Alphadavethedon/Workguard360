@@ -92,16 +92,14 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ employeeId: 1 });
+// ✅ Custom performance indexes (no duplicates)
 userSchema.index({ role: 1, department: 1 });
 userSchema.index({ isActive: 1 });
 
-// Hash password before saving
+// 🔒 Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
@@ -111,24 +109,24 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Compare password method
+// 🔐 Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Get full name virtual
+// 👤 Full name virtual
 userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Transform output
+// 🧹 Clean up output
 userSchema.methods.toJSON = function() {
   const user = this.toObject();
   delete user.password;
   return user;
 };
 
-// Static method to get user stats
+// 📊 Static method to get user stats
 userSchema.statics.getStats = async function() {
   return await this.aggregate([
     {
