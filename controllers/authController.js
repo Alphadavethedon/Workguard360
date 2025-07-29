@@ -14,8 +14,8 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    // Check if user exists
-    const user = await User.findOne({ email });
+    // Check if user exists and select password explicitly
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
@@ -26,6 +26,26 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    // Generate JWT
+    // Generate JWT token
     const token = jwt.sign(
-      { userId: user.
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'your_jwt_secret', // replace in .env
+      { expiresIn: '7d' }
+    );
+
+    // Remove password from user object before sending
+    const userData = user.toObject();
+    delete userData.password;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: userData
+    });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
