@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters'],
-    select: false
+    select: false // 🔐 Hide by default — must manually select in queries
   },
   role: {
     type: String,
@@ -92,14 +92,13 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// ✅ Custom performance indexes (no duplicates)
+// ✅ Indexes
 userSchema.index({ role: 1, department: 1 });
 userSchema.index({ isActive: 1 });
 
-// 🔒 Hash password before saving
+// 🔒 Hash before save
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
@@ -109,7 +108,7 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// 🔐 Compare password method
+// 🔐 Compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
@@ -119,14 +118,14 @@ userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// 🧹 Clean up output
+// 🧹 Hide password on response
 userSchema.methods.toJSON = function() {
   const user = this.toObject();
   delete user.password;
   return user;
 };
 
-// 📊 Static method to get user stats
+// 📊 Aggregated stats
 userSchema.statics.getStats = async function() {
   return await this.aggregate([
     {
