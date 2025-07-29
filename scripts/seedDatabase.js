@@ -1,32 +1,29 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('../models/User'); // 👈 correct relative path
 const bcrypt = require('bcryptjs');
+const User = require('../models/User'); // adjust if needed
 
 const seedAdmin = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
 
-    const adminExists = await User.findOne({ email: 'admin@workguard360.com' });
-    if (adminExists) {
-      console.log('✅ Admin already exists.');
-      return process.exit();
-    }
-
     const hashedPassword = await bcrypt.hash('demo123', 10);
 
-    const admin = new User({
-      name: 'Admin User',
-      email: 'admin@workguard360.com',
-      password: hashedPassword,
-      role: 'admin'
-    });
+    await User.findOneAndUpdate(
+      { email: 'admin@workguard360.com' },
+      {
+        name: 'Admin User',
+        email: 'admin@workguard360.com',
+        password: hashedPassword,
+        role: 'admin',
+      },
+      { upsert: true, new: true }
+    );
 
-    await admin.save();
-    console.log('✅ Admin user created successfully!');
+    console.log('✅ Admin user created or updated!');
     process.exit();
-  } catch (error) {
-    console.error('❌ Error seeding admin:', error);
+  } catch (err) {
+    console.error('❌ Error seeding admin:', err);
     process.exit(1);
   }
 };
