@@ -1,5 +1,3 @@
-
-
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
@@ -18,18 +16,17 @@ const seedAdmin = async () => {
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@workguard360.com',
-      password: 'demo123', // Will be hashed by pre('save')
+      password: 'demo123', // will be hashed via pre('save')
       employeeId: 'ADM001',
       department: 'IT',
       role: 'admin',
-      phone: '+254712345678',
-      isActive: true
+      phone: '+254712345678'
     });
 
-    console.log('✅ Admin user seeded:', admin.email);
+    console.log('✅ Admin user created:', admin.email);
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error seeding admin:', err);
+    console.error('❌ Failed to seed admin:', err);
     process.exit(1);
   }
 };
