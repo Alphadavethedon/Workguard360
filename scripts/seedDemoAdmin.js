@@ -15,19 +15,12 @@ async function seedAdmin() {
     }
 
     const hashedPassword = await bcrypt.hash("demo123", 10);
+
     const user = new User({
       email: "admin@workguard360.com",
       password: hashedPassword,
-      role: "admin"
+      role: "admin",
+      employeeId: "WGA-0001" // ✅ Added to satisfy the unique index
     });
 
-    await user.save();
-    console.log("✅ Demo admin user created.");
-    process.exit(0);
-  } catch (err) {
-    console.error("❌ Failed to seed admin:", err);
-    process.exit(1);
-  }
-}
-
-seedAdmin();
+    awa
