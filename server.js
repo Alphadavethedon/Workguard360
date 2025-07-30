@@ -5,13 +5,19 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const app = express();
-app.use(cors());
+
+// ✅ Correct CORS for Vercel frontend
+app.use(cors({
+  origin: 'https://workguard360.vercel.app',
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 
-// Root route
+// Root route for health check
 app.get('/', (req, res) => {
   res.send('WorkGuard360 API is running');
 });
