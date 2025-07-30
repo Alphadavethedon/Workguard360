@@ -91,15 +91,24 @@ app.use(helmet({
 }));
 
 // CORS Configuration - Critical for frontend connection
+const cors = require('cors');
+
+// Allow frontend URL (add more origins if needed)
+const allowedOrigins = ['https://workguard360.vercel.app'];
+
 app.use(cors({
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      process.env.CLIENT_URL,
-      'https://workguard360.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5000'
-    ];
+    // Allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
     
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
