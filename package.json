@@ -3,14 +3,11 @@
   "version": "1.0.0",
   "description": "Enterprise-grade workplace safety and security management backend",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "build": "echo 'No build step required'",
-    "dev": "nodemon server.js",
-    "test": "jest",
-    "lint": "eslint .",
-    "seed": "node scripts/seedDatabase.js"
-  },
+ "scripts": {
+  "start": "node server.js",
+  "build": "echo 'No build step required'",
+  "seed": "node scripts/seedAdmin.js"
+}
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
