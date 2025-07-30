@@ -20,7 +20,16 @@ async function seedAdmin() {
       email: "admin@workguard360.com",
       password: hashedPassword,
       role: "admin",
-      employeeId: "WGA-0001" // ✅ Added to satisfy the unique index
+      employeeId: "WGA-0001" // Add a unique employeeId
     });
 
-    awa
+    await user.save();
+    console.log("✅ Demo admin user created.");
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Failed to seed admin:", err);
+    process.exit(1);
+  }
+}
+
+seedAdmin(); // ← YOU PROBABLY MISSED THIS LINE
