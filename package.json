@@ -7,7 +7,7 @@
     "start": "node server.js",
     "build": "echo 'No build step required'",
     "seed": "node scripts/seedAdmin.js"
-  },                      <-- ✅ THIS COMMA WAS MISSING
+  },                      
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
