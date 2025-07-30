@@ -20,7 +20,7 @@ async function seedAdmin() {
       email: "admin@workguard360.com",
       password: hashedPassword,
       role: "admin",
-      employeeId: "WGA-0001" // Add a unique employeeId
+      employeeId: "WGA-0001", // Must be unique
     });
 
     await user.save();
@@ -32,4 +32,4 @@ async function seedAdmin() {
   }
 }
 
-seedAdmin(); // ← YOU PROBABLY MISSED THIS LINE
+seedAdmin();
