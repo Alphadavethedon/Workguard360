@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: 'admin' }
 });
 
-// Pre-save: Hash password before saving
+// Hash password before save
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -15,8 +15,8 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-// Instance method to compare passwords
-UserSchema.methods.comparePassword = async function (candidatePassword) {
+// Compare entered password with hashed password
+UserSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
