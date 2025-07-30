@@ -1,83 +1,71 @@
-import { useState } from 'react';
+// src/pages/Login.tsx
+import React, { useState } from 'react';
+import { useAuth } from '../hooks/api/auth';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
-const Login = () => {
+const Login: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+    setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
-        email,
-        password,
-      });
-
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard'); // or wherever your protected route starts
+      await login(email, password);
+      navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign In to WorkGuard360</h2>
-
-        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
-
-        <div className="mb-4">
-          <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">
-            Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/20 shadow-lg">
+        <h2 className="text-2xl font-semibold text-white mb-6 text-center">Sign In to WorkGuard360</h2>
+        {error && <div className="mb-4 text-sm text-red-400">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm text-gray-300 mb-1">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm text-gray-300 mb-1">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium transition duration-200"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+        <div className="mt-4 text-sm text-gray-400 text-center">
+          <a href="#" className="hover:underline">Forgot password?</a>
         </div>
-
-        <div className="mb-4">
-          <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="flex items-center justify-between mb-6 text-sm">
-          <label className="flex items-center">
-            <input type="checkbox" className="mr-2" />
-            Remember me
-          </label>
-          <a href="#" className="text-blue-600 hover:underline">
-            Forgot password?
-          </a>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          Sign In
-        </button>
-      </form>
+      </div>
     </div>
   );
 };
