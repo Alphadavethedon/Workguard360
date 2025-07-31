@@ -1,10 +1,11 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "workguard360-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npx update-browserslist-db@latest",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
