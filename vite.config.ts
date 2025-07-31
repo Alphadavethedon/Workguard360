@@ -28,7 +28,7 @@ export default defineConfig({
     minify: 'esbuild',
   },
   server: {
-    port: 5000,
+    port: 3000,
     open: true,
   },
 });
