@@ -58,14 +58,14 @@ const Login = () => {
           className="w-full mb-4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
           required
         />
-
-    <button
+        <button
   type="submit"
   disabled={loading}
   className="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium transition duration-200"
 >
   {loading ? 'Signing in...' : 'Sign In'}
 </button>
+
 
       </form>
     </div>
