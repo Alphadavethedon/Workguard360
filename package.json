@@ -2,12 +2,12 @@
   "name": "vite-react-typescript-starter",
   "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "dev": "vite",
-    "prebuild": "npx update-browserslist-db@latest",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
+ "scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
+}
+
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.1.3",
