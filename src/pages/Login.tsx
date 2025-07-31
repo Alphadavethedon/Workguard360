@@ -59,13 +59,14 @@ const Login = () => {
           required
         />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium transition duration-200"
-        >
-          {loading? 'Signing in...': 'Sign In'}
-        </button>
+    <button
+  type="submit"
+  disabled={loading}
+  className="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium transition duration-200"
+>
+  {loading ? 'Signing in...' : 'Sign In'}
+</button>
+
       </form>
     </div>
   );
