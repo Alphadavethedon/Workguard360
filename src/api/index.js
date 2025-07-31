@@ -1,10 +1,14 @@
-import axios from 'axios';
+const express = require('express');
+const cors = require('cors');
+const authRoutes = require('./routes/auth');
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL + '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const app = express();
+app.use(cors({
+  origin: 'https://workguard360.vercel.app',
+  credentials: true,
+}));
+app.use(express.json());
+app.use('/api', authRoutes);
 
-export default api;
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
