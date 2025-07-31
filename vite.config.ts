@@ -30,7 +30,7 @@ export default defineConfig({
     minify: 'esbuild', // Use esbuild for faster minification
   },
   server: {
-    port: 3000, // Default port for local dev
+    port: 5000, // Default port for local dev
     open: true, // Auto-open browser on dev
   },
 });
