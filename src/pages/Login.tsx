@@ -173,7 +173,7 @@ const Login = () => {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-400">
-               Always Secure
+               Enjoy your workplace security
               </p>
             </div>
           </motion.div>
