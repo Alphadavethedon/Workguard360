@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 
-
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
@@ -15,9 +14,15 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
-    if (token) {
+
+    // Validate token format: must be JWT format with 3 parts
+    if (token && token !== 'undefined' && token.split('.').length === 3) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Optional debug log
+      console.warn('Invalid token in localStorage:', token);
     }
+
     return config;
   },
   (error) => {
@@ -34,8 +39,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
       toast.error('Session expired. Please login again.');
+      window.location.href = '/login';
     } else if (error.response?.status === 403) {
       toast.error('You do not have permission to perform this action.');
     } else if (error.response && typeof error.response.status === 'number' && error.response.status >= 500) {
@@ -49,6 +54,7 @@ api.interceptors.response.use(
           : undefined;
       toast.error(errorMessage || 'An error occurred.');
     }
+
     return Promise.reject(error);
   }
 );
