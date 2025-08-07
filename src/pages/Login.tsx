@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { ArrowRight, Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('admin@workguard360.com');
@@ -173,7 +173,7 @@ const Login = () => {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-400">
-                Demo Credentials: admin@workguard360.com / demo123
+               Always Secure
               </p>
             </div>
           </motion.div>

@@ -293,9 +293,9 @@ const Admin = () => {
                       <td className="py-4 px-4">
                         <div className="flex items-center space-x-2">
                           <div className="w-16 bg-white/10 rounded-full h-2">
-                            <div 
-                              className="bg-gradient-to-r from-sky-400 to-blue-500 h-2 rounded-full"
-                              style={{ width: `${user.accessLevel * 10}%` }}
+                            <div
+                              className={`bg-gradient-to-r from-sky-400 to-blue-500 h-2 rounded-full`}
+                              data-access-width={user.accessLevel * 10}
                             />
                           </div>
                           <span className="text-white text-sm">{user.accessLevel}/10</span>
@@ -360,4 +360,21 @@ const Admin = () => {
   );
 };
 
+/* Add the following CSS to your global stylesheet or a CSS module and import it in this file:
+
+[data-access-width] {
+  width: 0%;
+  transition: width 0.3s;
+}
+[data-access-width="10"] { width: 10%; }
+[data-access-width="20"] { width: 20%; }
+[data-access-width="30"] { width: 30%; }
+[data-access-width="40"] { width: 40%; }
+[data-access-width="50"] { width: 50%; }
+[data-access-width="60"] { width: 60%; }
+[data-access-width="70"] { width: 70%; }
+[data-access-width="80"] { width: 80%; }
+[data-access-width="90"] { width: 90%; }
+[data-access-width="100"] { width: 100%; }
+*/
 export default Admin;

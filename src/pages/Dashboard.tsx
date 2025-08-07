@@ -14,12 +14,23 @@ import { StatCard } from '../components/ui/StatCard';
 import { GlassCard } from '../components/ui/GlassCard';
 
 const Dashboard = () => {
-  const stats = [
+  type StatColor = "sky" | "red" | "green" | "blue" | "purple" | "orange";
+  type StatTrend = "up" | "down";
+  interface Stat {
+    title: string;
+    value: string;
+    change: string;
+    trend: StatTrend;
+    icon: React.ElementType;
+    color: StatColor;
+  }
+  
+  const stats: Stat[] = [
     {
       title: 'Total Employees',
       value: '1,247',
       change: '+12%',
-      trend: 'up' as const,
+      trend: 'up',
       icon: Users,
       color: 'sky'
     },
@@ -27,7 +38,7 @@ const Dashboard = () => {
       title: 'Active Alerts',
       value: '23',
       change: '-8%',
-      trend: 'down' as const,
+      trend: 'down',
       icon: AlertTriangle,
       color: 'red'
     },
@@ -35,7 +46,7 @@ const Dashboard = () => {
       title: 'Compliance Score',
       value: '94.2%',
       change: '+2.1%',
-      trend: 'up' as const,
+      trend: 'up',
       icon: Shield,
       color: 'green'
     },
@@ -43,7 +54,7 @@ const Dashboard = () => {
       title: 'Today\'s Entries',
       value: '892',
       change: '+5%',
-      trend: 'up' as const,
+      trend: 'up',
       icon: TrendingUp,
       color: 'blue'
     }

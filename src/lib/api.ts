@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
@@ -37,12 +38,16 @@ api.interceptors.response.use(
       toast.error('Session expired. Please login again.');
     } else if (error.response?.status === 403) {
       toast.error('You do not have permission to perform this action.');
-    } else if (error.response?.status >= 500) {
+    } else if (error.response && typeof error.response.status === 'number' && error.response.status >= 500) {
       toast.error('Server error. Please try again later.');
     } else if (error.code === 'ECONNABORTED') {
       toast.error('Request timeout. Please check your connection.');
     } else {
-      toast.error(error.response?.data?.message || 'An error occurred.');
+      const errorMessage =
+        error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data
+          ? (error.response.data as { message?: string }).message
+          : undefined;
+      toast.error(errorMessage || 'An error occurred.');
     }
     return Promise.reject(error);
   }
