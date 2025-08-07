@@ -9,16 +9,18 @@ const auth = async (req, res, next) => {
     // Check for token in Authorization header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-    }
+    } 
     // Check for token in x-auth-token header
     else if (req.headers['x-auth-token']) {
       token = req.headers['x-auth-token'];
     }
 
-    if (!token) {
+    // Validate token format
+    if (!token || typeof token !== 'string' || token.split('.').length !== 3) {
+      logger.error(`Malformed or missing token: ${token}`);
       return res.status(401).json({
         success: false,
-        message: 'Access denied. No token provided.'
+        message: 'Access denied. Malformed or missing token.'
       });
     }
 
@@ -43,19 +45,4 @@ const auth = async (req, res, next) => {
       req.user = user;
       next();
     } catch (tokenError) {
-      logger.error('Token verification failed:', tokenError);
-      return res.status(401).json({
-        success: false,
-        message: 'Token is not valid.'
-      });
-    }
-  } catch (error) {
-    logger.error('Auth middleware error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during authentication'
-    });
-  }
-};
-
-module.exports = auth;
+      logg
