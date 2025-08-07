@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  Download, 
-  Calendar, 
-  Filter, 
+import {
   BarChart3,
-  PieChart,
-  TrendingUp,
-  Users,
+  Calendar,
+  Clock,
+  Download,
+  FileText,
+  Filter,
   Shield,
-  Clock
+  TrendingUp,
+  Users
 } from 'lucide-react';
-import { GlassCard } from '../components/ui/GlassCard';
+import { useState } from 'react';
 import { Button } from '../components/ui/Button';
+import { GlassCard } from '../components/ui/GlassCard';
 
 const Reports = () => {
   const [selectedDateRange, setSelectedDateRange] = useState('last-30-days');
@@ -87,7 +86,7 @@ const Reports = () => {
       id: 1,
       name: 'Weekly Access Summary - Week 2',
       type: 'Access Control',
-      generatedBy: 'Sarah Chen',
+      generatedBy: 'Davis Wabwile',
       generatedAt: '2024-01-15T10:30:00Z',
       size: '2.4 MB',
       format: 'PDF',
@@ -107,7 +106,7 @@ const Reports = () => {
       id: 3,
       name: 'Security Incidents - January',
       type: 'Security',
-      generatedBy: 'Emily Davis',
+      generatedBy: 'jay Jones',
       generatedAt: '2024-01-15T08:45:00Z',
       size: '1.8 MB',
       format: 'PDF',

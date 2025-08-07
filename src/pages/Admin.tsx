@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Shield, 
+import {
   Building,
-  Mail,
-  Phone,
   Calendar,
-  MoreVertical
+  Edit,
+  Filter,
+  Mail,
+  MoreVertical,
+  Phone,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
+  Users
 } from 'lucide-react';
-import { GlassCard } from '../components/ui/GlassCard';
+import { useState } from 'react';
 import { Button } from '../components/ui/Button';
+import { GlassCard } from '../components/ui/GlassCard';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState('users');
@@ -41,8 +41,8 @@ const Admin = () => {
     {
       id: 2,
       firstName: 'Mike',
-      lastName: 'Johnson',
-      email: 'mike.johnson@workguard360.com',
+      lastName: 'Nakuru',
+      email: 'mike.Nakuru@workguard360.com',
       role: 'Security Manager',
       department: 'Security',
       jobTitle: 'Head of Security',
@@ -55,9 +55,9 @@ const Admin = () => {
     },
     {
       id: 3,
-      firstName: 'Emily',
+      firstName: 'Grace',
       lastName: 'Davis',
-      email: 'emily.davis@workguard360.com',
+      email: 'Grace.davis@workguard360.com',
       role: 'HR Manager',
       department: 'Human Resources',
       jobTitle: 'HR Director',
@@ -71,8 +71,8 @@ const Admin = () => {
     {
       id: 4,
       firstName: 'Alex',
-      lastName: 'Rodriguez',
-      email: 'alex.rodriguez@workguard360.com',
+      lastName: 'njoroge',
+      email: 'alex.njoroge@workguard360.com',
       role: 'Employee',
       department: 'Engineering',
       jobTitle: 'Senior Software Engineer',
@@ -86,8 +86,8 @@ const Admin = () => {
     {
       id: 5,
       firstName: 'Lisa',
-      lastName: 'Wang',
-      email: 'lisa.wang@workguard360.com',
+      lastName: 'Wanjala',
+      email: 'lisa.wanjala@workguard360.com',
       role: 'Employee',
       department: 'Marketing',
       jobTitle: 'Marketing Specialist',

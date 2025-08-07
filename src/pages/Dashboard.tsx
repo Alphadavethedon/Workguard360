@@ -52,7 +52,7 @@ const Dashboard = () => {
   const recentActivity = [
     {
       id: 1,
-      user: 'Sarah Chen',
+      user: 'Don Dave',
       action: 'Badge scan - Main Entrance',
       time: '2 minutes ago',
       status: 'success',
@@ -68,7 +68,7 @@ const Dashboard = () => {
     },
     {
       id: 3,
-      user: 'Emily Davis',
+      user: 'Toto Davis',
       action: 'Badge scan - Parking Garage',
       time: '8 minutes ago',
       status: 'success',
@@ -76,7 +76,7 @@ const Dashboard = () => {
     },
     {
       id: 4,
-      user: 'Alex Rodriguez',
+      user: 'Alex Njoro',
       action: 'Emergency exit used',
       time: '12 minutes ago',
       status: 'alert',
@@ -84,7 +84,7 @@ const Dashboard = () => {
     },
     {
       id: 5,
-      user: 'Lisa Wang',
+      user: 'Lisa Wanjala',
       action: 'Badge scan - Conference Room',
       time: '15 minutes ago',
       status: 'success',
