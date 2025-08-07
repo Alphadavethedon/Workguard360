@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import axios from 'axios';
 import { User } from '../lib/types';
 
 interface AuthContextType {
@@ -15,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -25,94 +26,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ✅ Load user from backend on app start
   useEffect(() => {
-    // Check for stored user on app start
-    const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('authToken');
-    
-    if (storedUser && token) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
-      }
+    if (token) {
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => {
+          setUser(res.data.user);
+        })
+        .catch(() => {
+          localStorage.removeItem('authToken');
+          setUser(null);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
+  // ✅ Login function with API call
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock authentication - replace with actual API call
-      const mockUser: User = {
-        id: '1',
-        email,
-        firstName: 'Sarah',
-        lastName: 'Chen',
-        role: {
-          id: 'super-admin',
-          name: 'Super Admin',
-          description: 'Full system access',
-          permissions: [
-            { id: '1', name: 'user.create', resource: 'user', action: 'create', description: 'Create users' },
-            { id: '2', name: 'user.read', resource: 'user', action: 'read', description: 'View users' },
-            { id: '3', name: 'user.update', resource: 'user', action: 'update', description: 'Update users' },
-            { id: '4', name: 'user.delete', resource: 'user', action: 'delete', description: 'Delete users' },
-            { id: '5', name: 'alerts.manage', resource: 'alerts', action: 'manage', description: 'Manage alerts' },
-            { id: '6', name: 'reports.generate', resource: 'reports', action: 'generate', description: 'Generate reports' },
-          ],
-          isCustom: false,
-          createdAt: new Date().toISOString(),
-        },
-        department: 'Engineering',
-        jobTitle: 'Chief Technology Officer',
-        phone: '+1 (555) 123-4567',
-        emergencyContact: 'John Chen - +1 (555) 987-6543',
-        badgeNumber: 'WG-2024-0001',
-        accessLevel: 10,
-        isActive: true,
-        lastLogin: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        permissions: [
-          { id: '1', name: 'user.create', resource: 'user', action: 'create', description: 'Create users' },
-          { id: '2', name: 'user.read', resource: 'user', action: 'read', description: 'View users' },
-          { id: '3', name: 'user.update', resource: 'user', action: 'update', description: 'Update users' },
-          { id: '4', name: 'user.delete', resource: 'user', action: 'delete', description: 'Delete users' },
-          { id: '5', name: 'alerts.manage', resource: 'alerts', action: 'manage', description: 'Manage alerts' },
-          { id: '6', name: 'reports.generate', resource: 'reports', action: 'generate', description: 'Generate reports' },
-        ],
-      };
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, { email, password });
+      const { token, user } = res.data;
 
-      const mockToken = 'mock-jwt-token';
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('authToken', mockToken);
-      setUser(mockUser);
+      localStorage.setItem('authToken', token);
+      setUser(user);
     } catch (error) {
-      throw new Error('Login failed');
+      throw new Error('Invalid credentials');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ Logout function
   const logout = () => {
-    localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     setUser(null);
   };
 
-  const hasPermission = (permission: string): boolean => {
-    if (!user) return false;
-    return user.permissions.some(p => p.name === permission);
-  };
+  const hasPermission = (permission: string) =>
+    user?.permissions?.some(p => p.name === permission) ?? false;
 
-  const hasRole = (role: string): boolean => {
-    if (!user) return false;
-    return user.role.name.toLowerCase() === role.toLowerCase();
-  };
+  const hasRole = (role: string) =>
+    user?.role?.name?.toLowerCase() === role.toLowerCase();
 
   const value: AuthContextType = {
     user,
@@ -124,5 +84,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasRole,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
