@@ -104,6 +104,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.get('/', (req, res) => {
+  res.send('WorkGuard360 Backend API is running.');
+});
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
