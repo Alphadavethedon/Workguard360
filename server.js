@@ -99,7 +99,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/health', healthRoutes);
 
 // API routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', userRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/reports', reportRoutes);
