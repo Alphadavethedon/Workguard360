@@ -1,41 +1,84 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Role = require('../models/Role');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 const logger = require('../utils/logger');
 
 const router = express.Router();
 
-// @desc    Get all users
 // @route   GET /api/users
-// @access  Private (Admin/Security Manager)
-router.get('/', [auth, authorize('admin', 'security_manager')], async (req, res) => {
+// @desc    Get all users with pagination and filtering
+// @access  Private (requires user.read permission)
+router.get('/', [
+  auth,
+  authorize('user.read'),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('search').optional().trim(),
+  query('department').optional().trim(),
+  query('role').optional().trim(),
+  query('isActive').optional().isBoolean()
+], async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    
-    const filter = {};
-    
-    // Apply filters
-    if (req.query.department) filter.department = req.query.department;
-    if (req.query.role) filter.role = req.query.role;
-    if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === 'true';
-    if (req.query.search) {
-      filter.$or = [
-        { name: { $regex: req.query.search, $options: 'i' } },
-        { email: { $regex: req.query.search, $options: 'i' } },
-        { employeeId: { $regex: req.query.search, $options: 'i' } }
-      ];
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid query parameters',
+        errors: errors.array()
+      });
     }
 
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      department,
+      role,
+      isActive
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+    
+    if (search) {
+      filter.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { badgeNumber: { $regex: search, $options: 'i' } },
+        { jobTitle: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (department) {
+      filter.department = department;
+    }
+    
+    if (isActive !== undefined) {
+      filter.isActive = isActive === 'true';
+    }
+
+    // Handle role filter
+    if (role) {
+      const roleDoc = await Role.findOne({ name: role });
+      if (roleDoc) {
+        filter.role = roleDoc._id;
+      }
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get users with pagination
     const [users, total] = await Promise.all([
       User.find(filter)
-        .select('-password')
+        .populate('role', 'name description accessLevel')
+        .select('-password -refreshToken')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(parseInt(limit)),
       User.countDocuments(filter)
     ]);
 
@@ -44,14 +87,14 @@ router.get('/', [auth, authorize('admin', 'security_manager')], async (req, res)
       data: {
         users,
         pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalUsers: total,
-          hasNext: page < Math.ceil(total / limit),
-          hasPrev: page > 1
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / parseInt(limit))
         }
       }
     });
+
   } catch (error) {
     logger.error('Get users error:', error);
     res.status(500).json({
@@ -61,13 +104,18 @@ router.get('/', [auth, authorize('admin', 'security_manager')], async (req, res)
   }
 });
 
-// @desc    Get user by ID
 // @route   GET /api/users/:id
-// @access  Private
-router.get('/:id', auth, async (req, res) => {
+// @desc    Get user by ID
+// @access  Private (requires user.read permission)
+router.get('/:id', [
+  auth,
+  authorize('user.read')
+], async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
-    
+    const user = await User.findById(req.params.id)
+      .populate('role', 'name description permissions accessLevel')
+      .select('-password -refreshToken');
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -75,19 +123,11 @@ router.get('/:id', auth, async (req, res) => {
       });
     }
 
-    // Users can only view their own profile unless admin/security_manager
-    if (user._id.toString() !== req.user._id.toString() && 
-        !['admin', 'security_manager'].includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
-    }
-
     res.json({
       success: true,
-      data: { user }
+      data: user
     });
+
   } catch (error) {
     logger.error('Get user error:', error);
     res.status(500).json({
@@ -97,77 +137,97 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
-// @desc    Create user
 // @route   POST /api/users
-// @access  Private (Admin only)
+// @desc    Create new user
+// @access  Private (requires user.create permission)
 router.post('/', [
   auth,
-  authorize('admin'),
-  body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('employeeId').trim().isLength({ min: 1 }).withMessage('Employee ID is required'),
-  body('department').trim().isLength({ min: 1 }).withMessage('Department is required'),
-  body('role').isIn(['admin', 'security_manager', 'security_guard', 'employee']).withMessage('Invalid role')
+  authorize('user.create'),
+  body('email').isEmail().normalizeEmail(),
+  body('firstName').trim().isLength({ min: 2 }),
+  body('lastName').trim().isLength({ min: 2 }),
+  body('department').isIn(['Engineering', 'Human Resources', 'Security', 'Operations', 'Finance', 'Marketing', 'Administration']),
+  body('jobTitle').trim().isLength({ min: 2 }),
+  body('badgeNumber').trim().isLength({ min: 3 }),
+  body('accessLevel').isInt({ min: 1, max: 10 }),
+  body('roleId').isMongoId()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation errors',
+        message: 'Validation failed',
         errors: errors.array()
       });
     }
 
-    const { name, email, employeeId, department, role, phone } = req.body;
+    const {
+      email,
+      firstName,
+      lastName,
+      department,
+      jobTitle,
+      badgeNumber,
+      phone,
+      emergencyContact,
+      accessLevel,
+      roleId
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { employeeId }]
+      $or: [{ email }, { badgeNumber: badgeNumber.toUpperCase() }]
     });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: existingUser.email === email ? 'Email already registered' : 'Employee ID already exists'
+        message: 'User with this email or badge number already exists'
       });
     }
 
-    // Create user with default password
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(12);
-    const defaultPassword = 'TempPass123!';
-    const hashedPassword = await bcrypt.hash(defaultPassword, salt);
+    // Verify role exists
+    const role = await Role.findById(roleId);
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role specified'
+      });
+    }
 
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).slice(-8);
+
+    // Create user
     const user = await User.create({
-      name,
       email,
-      password: hashedPassword,
-      employeeId,
+      password: tempPassword,
+      firstName,
+      lastName,
+      role: roleId,
       department,
-      role,
-      phone: phone || '',
-      isActive: true
+      jobTitle,
+      badgeNumber: badgeNumber.toUpperCase(),
+      phone,
+      emergencyContact,
+      accessLevel
     });
 
-    logger.info(`User created by admin: ${email}`);
+    // Get user with populated role
+    const populatedUser = await User.findById(user._id)
+      .populate('role', 'name description permissions accessLevel')
+      .select('-password -refreshToken');
+
+    logger.info(`New user created: ${email} by ${req.user.email}`);
 
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          employeeId: user.employeeId,
-          department: user.department,
-          role: user.role,
-          isActive: user.isActive
-        },
-        temporaryPassword: defaultPassword
-      }
+      data: populatedUser,
+      tempPassword // In production, send this via email
     });
+
   } catch (error) {
     logger.error('Create user error:', error);
     res.status(500).json({
@@ -177,27 +237,32 @@ router.post('/', [
   }
 });
 
-// @desc    Update user
 // @route   PUT /api/users/:id
-// @access  Private
+// @desc    Update user
+// @access  Private (requires user.update permission)
 router.put('/:id', [
   auth,
-  body('name').optional().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-  body('email').optional().isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('phone').optional().matches(/^\+?[\d\s-()]+$/).withMessage('Please provide a valid phone number')
+  authorize('user.update'),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('firstName').optional().trim().isLength({ min: 2 }),
+  body('lastName').optional().trim().isLength({ min: 2 }),
+  body('department').optional().isIn(['Engineering', 'Human Resources', 'Security', 'Operations', 'Finance', 'Marketing', 'Administration']),
+  body('jobTitle').optional().trim().isLength({ min: 2 }),
+  body('accessLevel').optional().isInt({ min: 1, max: 10 }),
+  body('roleId').optional().isMongoId(),
+  body('isActive').optional().isBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation errors',
+        message: 'Validation failed',
         errors: errors.array()
       });
     }
 
     const user = await User.findById(req.params.id);
-    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -205,52 +270,46 @@ router.put('/:id', [
       });
     }
 
-    // Users can only update their own profile unless admin
-    if (user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
-    }
-
-    const allowedUpdates = ['name', 'phone'];
-    
-    // Admin can update additional fields
-    if (req.user.role === 'admin') {
-      allowedUpdates.push('email', 'department', 'role', 'isActive');
-    }
-
-    const updates = {};
-    Object.keys(req.body).forEach(key => {
-      if (allowedUpdates.includes(key)) {
-        updates[key] = req.body[key];
-      }
-    });
-
-    // Check email uniqueness if updating email
-    if (updates.email && updates.email !== user.email) {
-      const emailExists = await User.findOne({ email: updates.email });
-      if (emailExists) {
+    // Check if email is being changed and if it's already taken
+    if (req.body.email && req.body.email !== user.email) {
+      const existingUser = await User.findOne({ email: req.body.email });
+      if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: 'Email already registered'
+          message: 'Email already in use'
         });
       }
     }
 
+    // Verify role if being updated
+    if (req.body.roleId) {
+      const role = await Role.findById(req.body.roleId);
+      if (!role) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid role specified'
+        });
+      }
+      req.body.role = req.body.roleId;
+      delete req.body.roleId;
+    }
+
+    // Update user
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      updates,
+      req.body,
       { new: true, runValidators: true }
-    ).select('-password');
+    ).populate('role', 'name description permissions accessLevel')
+     .select('-password -refreshToken');
 
-    logger.info(`User updated: ${updatedUser.email}`);
+    logger.info(`User updated: ${updatedUser.email} by ${req.user.email}`);
 
     res.json({
       success: true,
       message: 'User updated successfully',
-      data: { user: updatedUser }
+      data: updatedUser
     });
+
   } catch (error) {
     logger.error('Update user error:', error);
     res.status(500).json({
@@ -260,13 +319,15 @@ router.put('/:id', [
   }
 });
 
-// @desc    Delete user
 // @route   DELETE /api/users/:id
-// @access  Private (Admin only)
-router.delete('/:id', [auth, authorize('admin')], async (req, res) => {
+// @desc    Delete user (soft delete)
+// @access  Private (requires user.delete permission)
+router.delete('/:id', [
+  auth,
+  authorize('user.delete')
+], async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -274,22 +335,25 @@ router.delete('/:id', [auth, authorize('admin')], async (req, res) => {
       });
     }
 
-    // Prevent admin from deleting themselves
-    if (user._id.toString() === req.user._id.toString()) {
+    // Prevent self-deletion
+    if (user._id.toString() === req.user.id) {
       return res.status(400).json({
         success: false,
         message: 'Cannot delete your own account'
       });
     }
 
-    await User.findByIdAndDelete(req.params.id);
+    // Soft delete by deactivating
+    user.isActive = false;
+    await user.save();
 
-    logger.info(`User deleted by admin: ${user.email}`);
+    logger.info(`User deactivated: ${user.email} by ${req.user.email}`);
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User deactivated successfully'
     });
+
   } catch (error) {
     logger.error('Delete user error:', error);
     res.status(500).json({
@@ -299,53 +363,37 @@ router.delete('/:id', [auth, authorize('admin')], async (req, res) => {
   }
 });
 
-// @desc    Get user statistics
-// @route   GET /api/users/stats
-// @access  Private (Admin/Security Manager)
-router.get('/stats/overview', [auth, authorize('admin', 'security_manager')], async (req, res) => {
+// @route   POST /api/users/:id/reset-password
+// @desc    Reset user password
+// @access  Private (requires user.update permission)
+router.post('/:id/reset-password', [
+  auth,
+  authorize('user.update')
+], async (req, res) => {
   try {
-    const [
-      totalUsers,
-      activeUsers,
-      usersByRole,
-      usersByDepartment,
-      recentUsers
-    ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ isActive: true }),
-      User.aggregate([
-        { $group: { _id: '$role', count: { $sum: 1 } } }
-      ]),
-      User.aggregate([
-        { $group: { _id: '$department', count: { $sum: 1 } } }
-      ]),
-      User.find()
-        .select('name email employeeId department role createdAt')
-        .sort({ createdAt: -1 })
-        .limit(5)
-    ]);
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new temporary password
+    const tempPassword = Math.random().toString(36).slice(-8);
+    user.password = tempPassword;
+    await user.save();
+
+    logger.info(`Password reset for user: ${user.email} by ${req.user.email}`);
 
     res.json({
       success: true,
-      data: {
-        summary: {
-          totalUsers,
-          activeUsers,
-          inactiveUsers: totalUsers - activeUsers
-        },
-        usersByRole: usersByRole.reduce((acc, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {}),
-        usersByDepartment: usersByDepartment.reduce((acc, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {}),
-        recentUsers
-      }
+      message: 'Password reset successfully',
+      tempPassword // In production, send this via email
     });
+
   } catch (error) {
-    logger.error('Get user stats error:', error);
+    logger.error('Reset password error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
