@@ -11,8 +11,8 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 
 const { logger } = require('./utils/logger');
-const errorHandler = require('./middlewares/errorHandler');
-const notFound = require('./middlewares/notFound');
+const errorHandler = require('./middleware/errorHandler'); // ✅ fixed path
+const notFound = require('./middleware/notFound'); // ✅ fixed path
 
 // Routes
 const authRoutes = require('./routes/auth');
