@@ -10,12 +10,8 @@ const path = require('path');
 // Load env vars
 dotenv.config();
 
-// Utils
-const logger = require('./utils/logger');
-
-// Middleware
+const logger = require('./middlewares/logger');
 const errorHandler = require('./middleware/errorHandler');
-
 // Route files
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');

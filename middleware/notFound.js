@@ -1,8 +1,15 @@
-const notFound = (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-  });
-};
+// logger.js
+const { createLogger, transports, format } = require('winston');
 
-module.exports = notFound;
+const logger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp(),
+    format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
+  ),
+  transports: [
+    new transports.Console()
+  ]
+});
+
+module.exports = logger;
