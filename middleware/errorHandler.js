@@ -1,11 +1,9 @@
-// middlewares/errorHandler.js
-
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
-  const status = err.statusCode || 500;
-  res.status(status).json({
-    success: false,
-    message: err.message || 'Server Error',
+  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };
 
