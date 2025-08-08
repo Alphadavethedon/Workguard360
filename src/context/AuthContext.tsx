@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// ✅ Named export — This fixes your error
+// ✅ This is the missing piece that fixes your build
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
