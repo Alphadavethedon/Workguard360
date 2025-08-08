@@ -1,107 +1,82 @@
-require('dotenv').config();
-require('express-async-errors');
+// server.js
 const express = require('express');
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
 const compression = require('compression');
+const logger = require('./middleware/logger');
+const errorHandler = require('./middleware/errorHandler');
 
-const { logger } = require('./utils/logger');
-const errorHandler = require('./middleware/errorHandler'); // ✅ fixed path
-const notFound = require('./middleware/notFound'); // ✅ fixed path
+// Load env vars
+dotenv.config();
 
-// Routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const alertRoutes = require('./routes/alerts');
-const reportRoutes = require('./routes/reports');
-const dashboardRoutes = require('./routes/dashboard');
-const healthRoutes = require('./routes/health');
-
-// App setup
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true,
-  },
-});
-
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
-}));
-app.use(helmet());
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(cookieParser());
-app.use(compression());
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/alerts', alertRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/health', healthRoutes);
-
-// Not Found & Error Handling
-app.use(notFound);
-app.use(errorHandler);
-
-// Database & Server Start
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    logger.info('✅ Connected to MongoDB');
-    server.listen(PORT, () => {
-      logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
-      logger.info(`📊 Health check: http://localhost:${PORT}/api/health`);
-      logger.info(`🔗 Frontend URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
-    });
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
-  .catch((err) => {
-    logger.error('❌ MongoDB connection error:', err);
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
 
-// Socket.IO Realtime
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
+const app = express();
+const server = http.createServer(app);
 
-  socket.on('joinRoom', (userId) => {
-    socket.join(`user-${userId}`);
-    logger.info(`User ${userId} joined room`);
-  });
+// Middleware
+app.use(helmet()); // Security headers
+app.use(compression()); // Gzip compression
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(logger); // Custom request logger
+app.use(morgan('dev')); // HTTP logging
 
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/alerts', require('./routes/alertRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/health', require('./routes/healthRoutes'));
+
+// Error handler (last middleware)
+app.use(errorHandler);
+
+// Socket.IO setup
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST']
+  }
+});
+io.on('connection', socket => {
+  console.log('🔌 New client connected:', socket.id);
   socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
+    console.log('❌ Client disconnected:', socket.id);
   });
 });
 
-// Graceful Shutdown
-const shutdown = (signal) => {
-  logger.info(`Received ${signal}. Shutting down gracefully...`);
-  server.close(() => {
-    logger.info('Server closed.');
-    mongoose.connection.close(false, () => {
-      logger.info('MongoDB connection closed.');
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down server...');
+  mongoose.connection.close(false, () => {
+    console.log('💾 MongoDB connection closed.');
+    server.close(() => {
+      console.log('✅ Server stopped.');
       process.exit(0);
     });
   });
-};
+});
 
-['SIGINT', 'SIGTERM'].forEach((signal) => {
-  process.on(signal, () => shutdown(signal));
+// Start server
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

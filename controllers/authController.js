@@ -2,39 +2,60 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
-// Login controller
-exports.login = async (req, res) => {
+// Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '7d',
+  });
+};
+
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      res.status(400);
+      return next(new Error('Please provide email and password'));
+    }
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
+
+    if (!user) {
+      res.status(401);
+      return next(new Error('Invalid credentials'));
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    if (!isMatch) {
+      res.status(401);
+      return next(new Error('Invalid credentials'));
+    }
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name
-      }
+    res.status(200).json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      token: generateToken(user.id),
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+  } catch (error) {
+    next(error);
   }
 };
 
-// GetMe controller
-exports.getMe = async (req, res) => {
+// @desc    Get current logged-in user
+// @route   GET /api/auth/me
+// @access  Private
+const getMe = async (req, res, next) => {
   try {
-    res.status(200).json({ user: req.user });
-  } catch (err) {
-    console.error('GetMe failed:', err);
-    res.status(500).json({ message: 'Server error' });
+    const user = await User.findById(req.user.id).select('-password');
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
   }
 };
+
+module.exports = { login, getMe };
