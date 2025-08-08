@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -7,12 +6,12 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const http = require('http');
 const socketIo = require('socket.io');
-require('express-async-errors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Import middleware and utilities
-const errorHandler = require('./middleware/errorHandler');
+// Import utilities and middleware
 const logger = require('./utils/logger');
+const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -25,56 +24,54 @@ const healthRoutes = require('./routes/health');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.IO setup
+// Initialize Socket.IO with CORS
 const io = socketIo(server, {
   cors: {
-    origin: [
-      process.env.CLIENT_URL,
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'https://workguard360.vercel.app'
-    ],
-    methods: ['GET', 'POST'],
+    origin: process.env.CLIENT_URL || "https://workguard360.vercel.app",
+    methods: ["GET", "POST"],
     credentials: true
   }
 });
-app.set('io', io);
 
-// Trust proxy for platforms like Render
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Trust proxy for Render
 app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false
+  crossOriginOpenerPolicy: { policy: "same-origin" } 
 }));
 
-// Compression
+
+// Compression middleware
 app.use(compression());
 
-// Rate Limiting
+// Rate limiting
 const limiter = rateLimit({
-  windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000,
-  max: process.env.RATE_LIMIT_MAX || 100,
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  },
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 app.use('/api', limiter);
 
-// CORS
-app.use(cors({
+// CORS configuration
+const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-      process.env.CLIENT_URL,
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'https://workguard360.vercel.app'
+      'https://workguard360.vercel.app',
+      'http://localhost:5000',
+      'http://localhost:5173'
     ];
-    if (!origin || allowedOrigins.includes(origin)) {
+    
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -83,39 +80,52 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
-}));
+};
 
-// Logger
-app.use(morgan('combined', {
-  stream: { write: message => logger.info(message.trim()) }
-}));
+app.use(cors(corsOptions));
 
-// Body parsers
+// Logging middleware
+if (NODE_ENV === 'production') {
+  app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+} else {
+  app.use(morgan('dev'));
+}
+
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files
-app.use('/uploads', express.static('uploads'));
-
-// Routes
+// Health check endpoint (before auth middleware)
 app.use('/api/health', healthRoutes);
-app.use('/api/auth', authRoutes);
+
+// API routes
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', userRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-
-// Root endpoint
 app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'WorkGuard360 API is running!',
-    version: '1.0.0',
-    timestamp: new Date().toISOString()
+  res.send('WorkGuard360 Backend API is running.');
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  logger.info(Client connected: ${socket.id});
+  
+  socket.on('join-room', (userId) => {
+    socket.join(user-${userId});
+    logger.info(User ${userId} joined room);
+  });
+  
+  socket.on('disconnect', () => {
+    logger.info(Client disconnected: ${socket.id});
   });
 });
 
-// 404 Handler
+// Make io available to routes
+app.set('io', io);
+
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -123,90 +133,94 @@ app.use('*', (req, res) => {
   });
 });
 
-// Error Handler
+// Global error handler
 app.use(errorHandler);
 
-// Socket.IO events
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
-
-  socket.on('join-dashboard', () => {
-    socket.join('dashboard');
-    logger.info(`Client ${socket.id} joined dashboard room`);
-  });
-
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
-
-// MongoDB connection
+// Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    const mongoOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferCommands: false
+};
 
-    logger.info(`MongoDB Connected: ${conn.connection.host}`);
-    await createIndexes();
+
+    await mongoose.connect(process.env.MONGO_URI, mongoOptions);
+    logger.info('MongoDB connected successfully');
   } catch (error) {
     logger.error('Database connection failed:', error);
     process.exit(1);
   }
 };
 
-const createIndexes = async () => {
-  try {
-    const User = require('./models/User');
-    const Alert = require('./models/Alert');
-    const AccessLog = require('./models/AccessLog');
-    await User.createIndexes();
-    await Alert.createIndexes();
-    await AccessLog.createIndexes();
-    logger.info('Indexes created');
-  } catch (error) {
-    logger.error('Failed to create indexes:', error);
-  }
-};
+// Handle MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  logger.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('MongoDB disconnected');
+});
 
 // Graceful shutdown
-const gracefulShutdown = () => {
-  logger.info('Shutting down...');
-
+const gracefulShutdown = (signal) => {
+  logger.info(Received ${signal}. Shutting down gracefully...);
+  
   server.close(() => {
     logger.info('HTTP server closed');
+    
     mongoose.connection.close(false, () => {
-      logger.info('MongoDB disconnected');
+      logger.info('MongoDB connection closed');
       process.exit(0);
     });
   });
-
+  
+  // Force close after 10 seconds
   setTimeout(() => {
-    logger.error('Force shutdown');
+    logger.error('Could not close connections in time, forcefully shutting down');
     process.exit(1);
   }, 10000);
 };
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-process.on('unhandledRejection', (err) => {
-  logger.error('Unhandled Promise Rejection:', err);
-  gracefulShutdown();
-});
+// Handle process termination
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', err);
-  gracefulShutdown();
+  process.exit(1);
 });
 
-const PORT = process.env.PORT || 5000;
-
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    logger.info(`🚀 Server running on port ${PORT}`);
-    logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
-    logger.info(`🔗 Client URL: ${process.env.CLIENT_URL}`);
-  });
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
+
+// Start server
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    server.listen(PORT, '0.0.0.0', () => {
+      logger.info(🚀 Server running in ${NODE_ENV} mode on port ${PORT});
+      logger.info(📊 Health check: http://localhost:${PORT}/api/health);
+      
+      if (NODE_ENV === 'development') {
+        logger.info(🔗 Frontend URL: ${process.env.CLIENT_URL || 'http://localhost:3000'});
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = { app, server, io };
