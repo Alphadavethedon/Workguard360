@@ -4,12 +4,14 @@
   "description": "WorkGuard360 Production Backend - Enterprise Security Management System",
   "main": "server.js",
   "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js",
-  "seed": "node scripts/seed.js",
-  "test": "jest"
-}
-
+    "install-client": "npm install --prefix client",
+    "build-client": "npm run build --prefix client",
+    "build": "npm run install-client && npm run build-client",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seed.js",
+    "test": "jest"
+  },
   "keywords": [
     "security",
     "management",
