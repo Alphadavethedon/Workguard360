@@ -5,6 +5,11 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  firstName?: string; // Add firstName
+  lastName?: string;  // Add lastName
+  role?: {
+    name: string;     // Add role with a name property
+  };
 }
 
 interface AuthContextType {
@@ -57,7 +62,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// ✅ This is the missing piece that fixes your build
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
