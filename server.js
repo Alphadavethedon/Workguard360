@@ -29,7 +29,7 @@ const io = socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,
-  }
+  },
 });
 
 // Middleware
@@ -61,20 +61,20 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
-.then(() => {
-  logger.info('✅ Connected to MongoDB');
-  server.listen(PORT, () => {
-    logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
-    logger.info(`📊 Health check: http://localhost:${PORT}/api/health`);
-    logger.info(`🔗 Frontend URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+  .then(() => {
+    logger.info('✅ Connected to MongoDB');
+    server.listen(PORT, () => {
+      logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
+      logger.info(`📊 Health check: http://localhost:${PORT}/api/health`);
+      logger.info(`🔗 Frontend URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+    });
+  })
+  .catch((err) => {
+    logger.error('❌ MongoDB connection error:', err);
+    process.exit(1);
   });
-})
-.catch((err) => {
-  logger.error('❌ MongoDB connection error:', err);
-  process.exit(1);
-});
 
 // Socket.IO Realtime
 io.on('connection', (socket) => {
@@ -102,6 +102,6 @@ const shutdown = (signal) => {
   });
 };
 
-['SIGINT', 'SIGTERM'].forEach(signal => {
+['SIGINT', 'SIGTERM'].forEach((signal) => {
   process.on(signal, () => shutdown(signal));
 });
