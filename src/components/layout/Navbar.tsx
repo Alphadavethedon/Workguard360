@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
@@ -51,9 +52,9 @@ export const Navbar = () => {
           <div className="flex items-center space-x-3">
             <div className="text-right">
               <p className="text-sm font-medium text-white">
-                {user?.firstName} {user?.lastName}
+                {user?.name || 'Guest'}
               </p>
-              <p className="text-xs text-gray-400">{user?.role.name}</p>
+              <p className="text-xs text-gray-400">{user?.email}</p>
             </div>
             <div className="w-8 h-8 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
