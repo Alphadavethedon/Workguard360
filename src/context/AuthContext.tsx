@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface User { id: string; email: string; }
+interface User {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -16,7 +19,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
-    // your login logic here
+    // your login logic
   };
 
   const logout = () => {
@@ -32,6 +35,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
