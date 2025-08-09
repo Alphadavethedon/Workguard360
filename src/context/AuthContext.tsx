@@ -1,23 +1,19 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import axios from 'axios';
+// src/context/AuthContext.tsx
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import api from '../utils/api'; // we'll add this file next
 
-interface User {
+type User = {
   id: string;
   email: string;
   name?: string;
-  firstName?: string; // Add firstName
-  lastName?: string;  // Add lastName
-  role?: {
-    name: string;     // Add role with a name property
-  };
-}
+};
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
-}
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -25,26 +21,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Optional: try to restore user from token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    // fetch /auth/me
+    (async () => {
+      try {
+        setIsLoading(true);
+        const res = await api.get('/auth/me');
+        setUser(res.data.user || null);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-        { email, password }
-      );
-
+      const res = await api.post('/auth/login', { email, password });
       const token = res.data?.token;
-      const loggedInUser = res.data?.user;
-
-      if (!token || !loggedInUser) {
-        throw new Error('Invalid server response');
-      }
-
+      const userData = res.data?.user;
+      if (!token || !userData) throw new Error('Invalid server response');
       localStorage.setItem('authToken', token);
-      setUser(loggedInUser);
-    } catch (error: any) {
-      console.error('Login error:', error?.response?.data || error.message);
-      throw new Error('Login failed: Invalid credentials or server error.');
+      setUser(userData);
+    } catch (err: any) {
+      console.error('Login error:', err?.response?.data || err?.message);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -56,16 +62,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// ✅ Named export required by Navbar and other components
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
