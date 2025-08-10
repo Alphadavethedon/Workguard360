@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/button';
+import { Button } from '../components/ui/Button';
+
 import { motion } from 'framer-motion';
 
 const features = [
