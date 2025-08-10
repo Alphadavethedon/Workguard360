@@ -10,17 +10,15 @@ import Dashboard from './pages/Dashboard';
 import Alerts from './pages/Alerts';
 import Reports from './pages/Reports';
 import Admin from './pages/Admin';
+import LandingPage from './pages/LandingPage';
 
-const AppRoutes = () => {
+export default function AppRoutes() {
   const { isAuthenticated, isLoadingUser } = useAuth();
 
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-300">Loading WorkGuard360...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -28,12 +26,14 @@ const AppRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes>
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-          }
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
         />
+
+        {/* Protected */}
         <Route
           path="/"
           element={
@@ -42,7 +42,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="alerts" element={<Alerts />} />
           <Route path="reports" element={<Reports />} />
@@ -55,10 +54,10 @@ const AppRoutes = () => {
             }
           />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
   );
-};
-
-export default AppRoutes;
+}
