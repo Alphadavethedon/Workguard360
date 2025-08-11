@@ -19,9 +19,11 @@
 ---
 
 ## 📌 Overview
+
 <p align="center">
   <img src="screenshot.png" alt="WorkGuard360 Dashboard Preview" width="800"/>
 </p>
+
 
 **WorkGuard360** is a production-ready, **MERN-stack** enterprise-grade platform providing:
 
@@ -73,8 +75,8 @@ flowchart TD
 
 ### 🔔 Alert Center
 
-* Auto-generation on violations
-* Archive / resolve / escalate
+* Auto-generation of violations
+* Archive / resolve/escalate
 * Filter by **role**, **status**, or **time**
 
 ### 📄 Advanced Reporting
