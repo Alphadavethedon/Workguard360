@@ -20,9 +20,8 @@
 
 ## 📌 Overview
 
-
 <p align="center">
-  <img src="screenshot.png" alt="WorkGuard360 Dashboard Preview" width="800"/>
+  <img src="https://github.com/user-attachments/assets/YOUR-UPLOAD-ID" alt="WorkGuard360 Dashboard Preview" width="800"/>
 </p>
 
 
