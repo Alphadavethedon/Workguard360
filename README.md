@@ -2,6 +2,8 @@
 ---
 
 # 🚨 WorkGuard360 — Enterprise Workplace Security & Compliance Platform
+<img width="610" height="612" alt="image" src="https://github.com/user-attachments/assets/83f67354-f8c0-43da-904a-ff06663bc7d8" />
+
 
 **Smart Workplace Security & Compliance System**
 *Intelligent access monitoring, shift enforcement & real-time compliance alerts.*
