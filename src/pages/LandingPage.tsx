@@ -17,7 +17,7 @@ export function LandingPage() {
         {/* Hero Section */}
         <section className="text-center max-w-3xl mx-auto" aria-labelledby="landing-page-title">
           <h1 id="landing-page-title" className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
-            Secure Your Workplace with{' '}
+            Secure Your Workplace with{''}
             <span className="text-blue-600">WorkGuard360</span>
           </h1>
           <p className="text-lg text-slate-600 mb-8">
