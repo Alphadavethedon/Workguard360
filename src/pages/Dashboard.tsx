@@ -1,131 +1,88 @@
-import React from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Shield, 
-  AlertTriangle, 
-  TrendingUp, 
-  Clock, 
-  MapPin,
+import {
   Activity,
-  CheckCircle
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Shield,
+  TrendingUp,
+  Users,
+  XCircle,
 } from 'lucide-react';
-import { StatCard } from '../components/ui/StatCard';
+import React from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { StatCard } from '../components/ui/StatCard';
+import { useAuth } from '../hooks/api/useAuth';
+import { useDashboardStats, useRecentActivity } from '../hooks/api/useDashboard';
+import { AccessLog } from '../lib/types';
 
 const Dashboard = () => {
-  type StatColor = "sky" | "red" | "green" | "blue" | "purple" | "orange";
-  type StatTrend = "up" | "down";
-  interface Stat {
-    title: string;
-    value: string;
-    change: string;
-    trend: StatTrend;
-    icon: React.ElementType;
-    color: StatColor;
-  }
-  
-  const stats: Stat[] = [
-    {
-      title: 'Total Employees',
-      value: '1,247',
-      change: '+12%',
-      trend: 'up',
-      icon: Users,
-      color: 'sky'
-    },
-    {
-      title: 'Active Alerts',
-      value: '23',
-      change: '-8%',
-      trend: 'down',
-      icon: AlertTriangle,
-      color: 'red'
-    },
-    {
-      title: 'Compliance Score',
-      value: '94.2%',
-      change: '+2.1%',
-      trend: 'up',
-      icon: Shield,
-      color: 'green'
-    },
-    {
-      title: 'Today\'s Entries',
-      value: '892',
-      change: '+5%',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'blue'
-    }
-  ];
+  const { user } = useAuth();
+  const { data: statsData, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
+  const { data: recentActivity, isLoading: isLoadingActivity, error: activityError } = useRecentActivity(5);
 
-  const recentActivity = [
-    {
-      id: 1,
-      user: 'Don Dave',
-      action: 'Badge scan - Main Entrance',
-      time: '2 minutes ago',
-      status: 'success',
-      location: 'Building A - Floor 1'
-    },
-    {
-      id: 2,
-      user: 'Mike Johnson',
-      action: 'Access denied - Server Room',
-      time: '5 minutes ago',
-      status: 'warning',
-      location: 'Building B - Floor 3'
-    },
-    {
-      id: 3,
-      user: 'Toto Davis',
-      action: 'Badge scan - Parking Garage',
-      time: '8 minutes ago',
-      status: 'success',
-      location: 'Parking Level B1'
-    },
-    {
-      id: 4,
-      user: 'Alex Njoro',
-      action: 'Emergency exit used',
-      time: '12 minutes ago',
-      status: 'alert',
-      location: 'Building C - Floor 2'
-    },
-    {
-      id: 5,
-      user: 'Lisa Wanjala',
-      action: 'Badge scan - Conference Room',
-      time: '15 minutes ago',
-      status: 'success',
-      location: 'Building A - Floor 4'
-    }
-  ];
+  const stats = statsData
+    ? [
+        {
+          title: 'Total Employees',
+          value: statsData.totalEmployees.toLocaleString(),
+          change: '+12%', // Note: change data is not in API
+          trend: 'up' as const,
+          icon: Users,
+          color: 'sky' as const,
+        },
+        {
+          title: 'Active Alerts',
+          value: statsData.criticalAlerts.toLocaleString(),
+          change: '-8%', // Note: change data is not in API
+          trend: 'down' as const,
+          icon: AlertTriangle,
+          color: 'red' as const,
+        },
+        {
+          title: 'Compliance Score',
+          value: `${statsData.complianceScore.toFixed(1)}%`,
+          change: '+2.1%', // Note: change data is not in API
+          trend: 'up' as const,
+          icon: Shield,
+          color: 'green' as const,
+        },
+        {
+          title: "Today's Entries",
+          value: statsData.todayEntries.toLocaleString(),
+          change: '+5%', // Note: change data is not in API
+          trend: 'up' as const,
+          icon: TrendingUp,
+          color: 'blue' as const,
+        },
+      ]
+    : [];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'text-green-400';
-      case 'warning':
-        return 'text-yellow-400';
-      case 'alert':
-        return 'text-red-400';
-      default:
-        return 'text-gray-400';
-    }
+  const getStatusColor = (log: AccessLog) => {
+    if (!log.success) return 'text-red-400';
+    if (log.action === 'denied') return 'text-yellow-400';
+    return 'text-green-400';
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-400" />;
-      case 'alert':
-        return <AlertTriangle className="w-4 h-4 text-red-400" />;
+  const getStatusIcon = (log: AccessLog) => {
+    if (!log.success) return <XCircle className="w-4 h-4 text-red-400" />;
+    if (log.action === 'denied') return <AlertTriangle className="w-4 h-4 text-yellow-400" />;
+    return <CheckCircle className="w-4 h-4 text-green-400" />;
+  };
+
+  const getActionText = (log: AccessLog) => {
+    switch (log.action) {
+      case 'entry':
+        return `Badge scan - ${log.location}`;
+      case 'exit':
+        return `Badge scan (exit) - ${log.location}`;
+      case 'denied':
+        return `Access denied - ${log.location}`;
       default:
-        return <Activity className="w-4 h-4 text-gray-400" />;
+        return 'Unknown action';
     }
   };
 
@@ -140,7 +97,9 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">Welcome back! Here's what's happening at your workplace.</p>
+          <p className="text-gray-400">
+            Welcome back, {user?.firstName}! Here's what's happening at your workplace.
+          </p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-400">
           <Clock className="w-4 h-4" />
@@ -150,16 +109,25 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-          >
-            <StatCard {...stat} />
-          </motion.div>
-        ))}
+        {isLoadingStats
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <GlassCard key={index} className="flex items-center justify-center h-40">
+                <LoadingSpinner />
+              </GlassCard>
+            ))
+          : stats.map((stat, index) => (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <StatCard {...stat} />
+              </motion.div>
+            ))}
+        {statsError && (
+          <div className="col-span-full text-red-400">Failed to load stats.</div>
+        )}
       </div>
 
       {/* Main Content Grid */}
@@ -182,36 +150,44 @@ const Dashboard = () => {
                 <span className="text-sm text-gray-400">Live</span>
               </div>
             </div>
-            
+
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {recentActivity.map((activity, index) => (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="flex items-start space-x-3 p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200"
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    {getStatusIcon(activity.status)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-white truncate">
-                        {activity.user}
+              {isLoadingActivity ? (
+                <div className="flex items-center justify-center h-64">
+                  <LoadingSpinner />
+                </div>
+              ) : activityError ? (
+                <div className="text-red-400 text-center">Failed to load activity.</div>
+              ) : (
+                recentActivity?.map((activity, index) => (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="flex items-start space-x-3 p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200"
+                  >
+                    <div className="flex-shrink-0 mt-1">{getStatusIcon(activity)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-white truncate">
+                          {activity.userName}
+                        </p>
+                        <span className="text-xs text-gray-400">
+                          {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className={`text-sm ${getStatusColor(activity)} mt-1`}>
+                        {getActionText(activity)}
                       </p>
-                      <span className="text-xs text-gray-400">{activity.time}</span>
+                      <div className="flex items-center mt-2 text-xs text-gray-500">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {activity.location}
+                      </div>
                     </div>
-                    <p className={`text-sm ${getStatusColor(activity.status)} mt-1`}>
-                      {activity.action}
-                    </p>
-                    <div className="flex items-center mt-2 text-xs text-gray-500">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {activity.location}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </div>
           </GlassCard>
         </motion.div>

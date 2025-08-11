@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+[data-access-width] {
+  width: 0%;
+  transition: width 0.3s;
+}
+[data-access-width="10"] { width: 10%; }
+[data-access-width="20"] { width: 20%; }
+[data-access-width="30"] { width: 30%; }
+[data-access-width="40"] { width: 40%; }
+[data-access-width="50"] { width: 50%; }
+[data-access-width="60"] { width: 60%; }
+[data-access-width="70"] { width: 70%; }
+[data-access-width="80"] { width: 80%; }
+[data-access-width="90"] { width: 90%; }
+[data-access-width="100"] { width: 100%; }

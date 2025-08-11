@@ -1,27 +1,38 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/api/useAuth';
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address').min(1, 'Email is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [email, setEmail] = useState('admin@workguard360.com');
-  const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoggingIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await login(email, password);
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: 'admin@workguard360.com',
+      password: 'demo123',
+    },
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
+    login(data);
   };
 
   return (
@@ -101,7 +112,7 @@ const Login = () => {
               <p className="text-gray-400">Sign in to your WorkGuard360 account</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
@@ -110,13 +121,14 @@ const Login = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all duration-200"
+                    {...register('email')}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 transition-all duration-200 ${
+                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-white/10 focus:border-sky-400 focus:ring-sky-400'
+                    }`}
                     placeholder="Enter your email"
-                    required
                   />
                 </div>
+                {errors.email && <p className="text-red-400 text-sm mt-2">{errors.email.message}</p>}
               </div>
 
               <div>
@@ -127,11 +139,11 @@ const Login = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all duration-200"
+                    {...register('password')}
+                    className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 transition-all duration-200 ${
+                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-white/10 focus:border-sky-400 focus:ring-sky-400'
+                    }`}
                     placeholder="Enter your password"
-                    required
                   />
                   <button
                     type="button"
@@ -141,6 +153,7 @@ const Login = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {errors.password && <p className="text-red-400 text-sm mt-2">{errors.password.message}</p>}
               </div>
 
               <div className="flex items-center justify-between">
@@ -160,14 +173,14 @@ const Login = () => {
                 type="submit"
                 variant="primary"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoggingIn}
               >
-                {isLoading ? (
+                {isLoggingIn ? (
                   <LoadingSpinner size="sm" className="mr-2" />
                 ) : (
                   <ArrowRight className="w-4 h-4 mr-2" />
                 )}
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoggingIn ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
 

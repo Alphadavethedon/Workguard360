@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { format, formatDistanceToNow } from 'date-fns';
 import {
   Building,
   Calendar,
@@ -11,105 +12,84 @@ import {
   Search,
   Shield,
   Trash2,
-  Users
+  Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useDebounce } from 'use-debounce';
 import { Button } from '../components/ui/Button';
 import { GlassCard } from '../components/ui/GlassCard';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { useUsers } from '../hooks/api/useUsers';
+import { User } from '../lib/types';
+import { UserForm } from '../components/forms/UserForm';
+import { CreateUserFormData } from '../lib/validations';
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState('users');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [page, setPage] = useState(1);
 
-  const users = [
-    {
-      id: 1,
-      firstName: 'Davis',
-      lastName: 'Don',
-      email: 'davis.don@workguard360.com',
-      role: 'Super Admin',
-      department: 'Engineering',
-      jobTitle: 'Chief Technology Officer',
-      phone: '+1 (555) 123-4567',
-      badgeNumber: 'WG-2024-0001',
-      accessLevel: 10,
-      status: 'active',
-      lastLogin: '2024-01-15T10:30:00Z',
-      joinDate: '2023-01-15T00:00:00Z'
-    },
-    {
-      id: 2,
-      firstName: 'Mike',
-      lastName: 'Nakuru',
-      email: 'mike.Nakuru@workguard360.com',
-      role: 'Security Manager',
-      department: 'Security',
-      jobTitle: 'Head of Security',
-      phone: '+1 (555) 234-5678',
-      badgeNumber: 'WG-2024-0002',
-      accessLevel: 8,
-      status: 'active',
-      lastLogin: '2024-01-15T09:15:00Z',
-      joinDate: '2023-02-01T00:00:00Z'
-    },
-    {
-      id: 3,
-      firstName: 'Grace',
-      lastName: 'Davis',
-      email: 'Grace.davis@workguard360.com',
-      role: 'HR Manager',
-      department: 'Human Resources',
-      jobTitle: 'HR Director',
-      phone: '+1 (555) 345-6789',
-      badgeNumber: 'WG-2024-0003',
-      accessLevel: 7,
-      status: 'active',
-      lastLogin: '2024-01-15T08:45:00Z',
-      joinDate: '2023-03-10T00:00:00Z'
-    },
-    {
-      id: 4,
-      firstName: 'Alex',
-      lastName: 'njoroge',
-      email: 'alex.njoroge@workguard360.com',
-      role: 'Employee',
-      department: 'Engineering',
-      jobTitle: 'Senior Software Engineer',
-      phone: '+1 (555) 456-7890',
-      badgeNumber: 'WG-2024-0004',
-      accessLevel: 5,
-      status: 'active',
-      lastLogin: '2024-01-15T07:30:00Z',
-      joinDate: '2023-04-20T00:00:00Z'
-    },
-    {
-      id: 5,
-      firstName: 'Lisa',
-      lastName: 'Wanjala',
-      email: 'lisa.wanjala@workguard360.com',
-      role: 'Employee',
-      department: 'Marketing',
-      jobTitle: 'Marketing Specialist',
-      phone: '+1 (555) 567-8901',
-      badgeNumber: 'WG-2024-0005',
-      accessLevel: 3,
-      status: 'inactive',
-      lastLogin: '2024-01-10T16:20:00Z',
-      joinDate: '2023-05-15T00:00:00Z'
-    }
-  ];
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
+
+  const {
+    users,
+    total,
+    isLoading,
+    error,
+    createUser,
+    updateUser,
+    deleteUser,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useUsers({
+    page,
+    limit: 10,
+    search: debouncedSearchTerm,
+    department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+  });
 
   const departments = ['Engineering', 'Security', 'Human Resources', 'Marketing', 'Finance', 'Operations'];
 
   const tabs = [
     { id: 'users', label: 'Users', icon: Users },
     { id: 'roles', label: 'Roles & Permissions', icon: Shield },
-    { id: 'departments', label: 'Departments', icon: Building }
+    { id: 'departments', label: 'Departments', icon: Building },
   ];
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
+  const handleCreateUser = () => {
+    setSelectedUser(undefined);
+    setIsFormOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      deleteUser(userId);
+    }
+  };
+
+  const handleFormSubmit = (data: CreateUserFormData) => {
+    if (selectedUser) {
+      updateUser({ ...data, id: selectedUser.id }, {
+        onSuccess: () => setIsFormOpen(false),
+      });
+    } else {
+      createUser(data, {
+        onSuccess: () => setIsFormOpen(false),
+      });
+    }
+  };
+
+  const getRoleColor = (roleName: string) => {
+    switch (roleName) {
       case 'Super Admin':
         return 'text-red-400 bg-red-400/20 border-red-400/30';
       case 'Admin':
@@ -125,44 +105,23 @@ const Admin = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    return status === 'active' 
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
       ? 'text-green-400 bg-green-400/20 border-green-400/30'
       : 'text-red-400 bg-red-400/20 border-red-400/30';
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return format(new Date(dateString), 'MMM d, yyyy');
   };
 
-  const formatLastLogin = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    
-    if (hours < 24) {
-      return `${hours} hours ago`;
-    } else {
-      const days = Math.floor(hours / 24);
-      return `${days} days ago`;
-    }
+  const formatLastLogin = (dateString?: string) => {
+    if (!dateString) return 'Never';
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
   };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || user.department === selectedDepartment;
-    return matchesSearch && matchesDepartment;
-  });
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -175,7 +134,7 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Administration</h1>
           <p className="text-gray-400">Manage users, roles, and system configuration.</p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" onClick={handleCreateUser}>
           <Plus className="w-4 h-4 mr-2" />
           Add User
         </Button>
@@ -227,8 +186,10 @@ const Admin = () => {
                   className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                 >
                   <option value="all">All Departments</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -251,83 +212,108 @@ const Admin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user, index) => (
-                    <motion.tr
-                      key={user.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="border-b border-white/5 hover:bg-white/5 transition-all duration-200"
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">
-                              {user.firstName[0]}{user.lastName[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="text-white font-medium">
-                              {user.firstName} {user.lastName}
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-12">
+                        <LoadingSpinner />
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-12 text-red-400">
+                        Failed to load users.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user, index) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="border-b border-white/5 hover:bg-white/5 transition-all duration-200"
+                      >
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full flex items-center justify-center">
+                              <span className="text-white font-medium text-sm">
+                                {user.firstName[0]}
+                                {user.lastName[0]}
+                              </span>
                             </div>
-                            <div className="text-gray-400 text-sm flex items-center space-x-1">
-                              <Mail className="w-3 h-3" />
-                              <span>{user.email}</span>
-                            </div>
-                            <div className="text-gray-400 text-sm flex items-center space-x-1">
-                              <Phone className="w-3 h-3" />
-                              <span>{user.phone}</span>
+                            <div>
+                              <div className="text-white font-medium">
+                                {user.firstName} {user.lastName}
+                              </div>
+                              <div className="text-gray-400 text-sm flex items-center space-x-1">
+                                <Mail className="w-3 h-3" />
+                                <span>{user.email}</span>
+                              </div>
+                              {user.phone && (
+                                <div className="text-gray-400 text-sm flex items-center space-x-1">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{user.phone}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(user.role)}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-white">{user.department}</div>
-                        <div className="text-gray-400 text-sm">{user.jobTitle}</div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-16 bg-white/10 rounded-full h-2">
-                            <div
-                              className={`bg-gradient-to-r from-sky-400 to-blue-500 h-2 rounded-full`}
-                              data-access-width={user.accessLevel * 10}
-                            />
+                        </td>
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(
+                              user.role.name
+                            )}`}
+                          >
+                            {user.role.name}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-white">{user.department}</div>
+                          <div className="text-gray-400 text-sm">{user.jobTitle}</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-16 bg-white/10 rounded-full h-2">
+                              <div
+                                className={`bg-gradient-to-r from-sky-400 to-blue-500 h-2 rounded-full`}
+                                style={{ width: `${user.accessLevel * 10}%` }}
+                              />
+                            </div>
+                            <span className="text-white text-sm">{user.accessLevel}/10</span>
                           </div>
-                          <span className="text-white text-sm">{user.accessLevel}/10</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(user.status)}`}>
-                          {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-white text-sm">{formatLastLogin(user.lastLogin)}</div>
-                        <div className="text-gray-400 text-xs flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>Joined {formatDate(user.joinDate)}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                              user.isActive
+                            )}`}
+                          >
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-white text-sm">{formatLastLogin(user.lastLogin)}</div>
+                          <div className="text-gray-400 text-xs flex items-center space-x-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>Joined {formatDate(user.createdAt)}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(user.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -357,24 +343,18 @@ const Admin = () => {
         </GlassCard>
       )}
     </motion.div>
+    <AnimatePresence>
+        {isFormOpen && (
+          <UserForm
+            user={selectedUser}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsFormOpen(false)}
+            isLoading={isCreating || isUpdating}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
-/* Add the following CSS to your global stylesheet or a CSS module and import it in this file:
-
-[data-access-width] {
-  width: 0%;
-  transition: width 0.3s;
-}
-[data-access-width="10"] { width: 10%; }
-[data-access-width="20"] { width: 20%; }
-[data-access-width="30"] { width: 30%; }
-[data-access-width="40"] { width: 40%; }
-[data-access-width="50"] { width: 50%; }
-[data-access-width="60"] { width: 60%; }
-[data-access-width="70"] { width: 70%; }
-[data-access-width="80"] { width: 80%; }
-[data-access-width="90"] { width: 90%; }
-[data-access-width="100"] { width: 100%; }
-*/
 export default Admin;

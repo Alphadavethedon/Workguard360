@@ -1,87 +1,43 @@
-import React, { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { 
-  AlertTriangle, 
-  Filter, 
-  Search, 
-  Clock, 
-  MapPin, 
-  User,
+import {
+  AlertTriangle,
   CheckCircle,
+  Clock,
+  Eye,
+  Filter,
+  MapPin,
+  Search,
+  User,
   XCircle,
-  Eye
 } from 'lucide-react';
-import { GlassCard } from '../components/ui/GlassCard';
+import React, { useState } from 'react';
+import { useDebounce } from 'use-debounce';
+import { useAlerts } from '../hooks/api/useAlerts';
 import { Button } from '../components/ui/Button';
+import { GlassCard } from '../components/ui/GlassCard';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { Alert } from '../lib/types';
 
 const Alerts = () => {
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
-  const alerts = [
-    {
-      id: 1,
-      type: 'security',
-      severity: 'critical',
-      title: 'Unauthorized Access Attempt',
-      description: 'Multiple failed badge scans detected at Server Room entrance',
-      location: 'Building B - Floor 3 - Server Room',
-      timestamp: '2024-01-15T10:30:00Z',
-      status: 'active',
-      assignedTo: 'Security Team',
-      triggeredBy: 'Badge Scanner #SR-301'
-    },
-    {
-      id: 2,
-      type: 'compliance',
-      severity: 'high',
-      title: 'Fire Door Propped Open',
-      description: 'Emergency fire door has been held open for over 10 minutes',
-      location: 'Building A - Floor 2 - East Wing',
-      timestamp: '2024-01-15T10:15:00Z',
-      status: 'acknowledged',
-      assignedTo: 'Facilities Team',
-      triggeredBy: 'Door Sensor #FD-A2E'
-    },
-    {
-      id: 3,
-      type: 'system',
-      severity: 'medium',
-      title: 'Biometric Scanner Offline',
-      description: 'Fingerprint scanner not responding to authentication requests',
-      location: 'Building C - Main Entrance',
-      timestamp: '2024-01-15T09:45:00Z',
-      status: 'resolved',
-      assignedTo: 'IT Support',
-      triggeredBy: 'System Monitor'
-    },
-    {
-      id: 4,
-      type: 'emergency',
-      severity: 'critical',
-      title: 'Emergency Exit Alarm',
-      description: 'Emergency exit door opened without authorization',
-      location: 'Building A - Floor 1 - Emergency Exit 3',
-      timestamp: '2024-01-15T09:30:00Z',
-      status: 'active',
-      assignedTo: 'Security Team',
-      triggeredBy: 'Exit Alarm #EA-A1-3'
-    },
-    {
-      id: 5,
-      type: 'security',
-      severity: 'low',
-      title: 'Badge Not Returned',
-      description: 'Employee badge not scanned out after business hours',
-      location: 'Building B - Floor 1',
-      timestamp: '2024-01-14T18:30:00Z',
-      status: 'acknowledged',
-      assignedTo: 'HR Department',
-      triggeredBy: 'Time-based Monitor'
-    }
-  ];
+  const {
+    alerts,
+    isLoading,
+    error,
+    acknowledgeAlert,
+    resolveAlert,
+    isAcknowledging,
+    isResolving,
+  } = useAlerts({
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    search: debouncedSearchTerm,
+  });
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: Alert['severity']) => {
     switch (severity) {
       case 'critical':
         return 'bg-red-500';
@@ -96,7 +52,7 @@ const Alerts = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Alert['status']) => {
     switch (status) {
       case 'active':
         return 'text-red-400 bg-red-400/20 border-red-400/30';
@@ -109,7 +65,7 @@ const Alerts = () => {
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: Alert['type']) => {
     switch (type) {
       case 'security':
         return <AlertTriangle className="w-4 h-4" />;
@@ -123,30 +79,6 @@ const Alerts = () => {
         return <AlertTriangle className="w-4 h-4" />;
     }
   };
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    
-    if (minutes < 60) {
-      return `${minutes} minutes ago`;
-    } else if (hours < 24) {
-      return `${hours} hours ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
-
-  const filteredAlerts = alerts.filter(alert => {
-    const matchesFilter = selectedFilter === 'all' || alert.status === selectedFilter;
-    const matchesSearch = alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alert.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alert.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
 
   return (
     <motion.div
@@ -188,8 +120,8 @@ const Alerts = () => {
           <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-gray-400" />
             <select
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
             >
               <option value="all">All Status</option>
@@ -203,86 +135,117 @@ const Alerts = () => {
 
       {/* Alerts List */}
       <div className="space-y-4">
-        {filteredAlerts.map((alert, index) => (
-          <motion.div
-            key={alert.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <GlassCard className="hover:bg-white/15 transition-all duration-200 cursor-pointer">
-              <div className="flex items-start space-x-4">
-                {/* Severity Indicator */}
-                <div className={`w-1 h-16 rounded-full ${getSeverityColor(alert.severity)}`} />
-                
-                {/* Alert Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="text-gray-400">
-                          {getTypeIcon(alert.type)}
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <GlassCard key={index} className="h-40">
+              <LoadingSpinner />
+            </GlassCard>
+          ))
+        ) : error ? (
+          <GlassCard className="text-center py-12 text-red-400">
+            Failed to load alerts.
+          </GlassCard>
+        ) : alerts.length > 0 ? (
+          alerts.map((alert, index) => (
+            <motion.div
+              key={alert.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <GlassCard className="hover:bg-white/15 transition-all duration-200">
+                <div className="flex items-start space-x-4">
+                  {/* Severity Indicator */}
+                  <div className={`w-1 h-24 rounded-full ${getSeverityColor(alert.severity)}`} />
+
+                  {/* Alert Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <div className="text-gray-400">{getTypeIcon(alert.type)}</div>
+                          <h3 className="text-lg font-semibold text-white">{alert.title}</h3>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                              alert.status
+                            )}`}
+                          >
+                            {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+                          </span>
                         </div>
-                        <h3 className="text-lg font-semibold text-white">{alert.title}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(alert.status)}`}>
-                          {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-                        </span>
+
+                        <p className="text-gray-300 mb-3">{alert.description}</p>
+
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{alert.location}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}
+                            </span>
+                          </div>
+                          {alert.assignedTo && (
+                            <div className="flex items-center space-x-1">
+                              <User className="w-4 h-4" />
+                              <span>Assigned to: {alert.assignedTo}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      
-                      <p className="text-gray-300 mb-3">{alert.description}</p>
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                        <div className="flex items-center space-x-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{alert.location}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{formatTime(alert.timestamp)}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <User className="w-4 h-4" />
-                          <span>Assigned to: {alert.assignedTo}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex items-center space-x-2 ml-4">
-                      {alert.status === 'active' && (
-                        <>
-                          <Button variant="secondary" size="sm">
-                            Acknowledge
-                          </Button>
-                          <Button variant="primary" size="sm">
+
+                      {/* Actions */}
+                      <div className="flex items-center space-x-2 ml-4">
+                        {alert.status === 'active' && (
+                          <>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => acknowledgeAlert(alert.id)}
+                              disabled={isAcknowledging || isResolving}
+                            >
+                              Acknowledge
+                            </Button>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => resolveAlert(alert.id)}
+                              disabled={isAcknowledging || isResolving}
+                            >
+                              Resolve
+                            </Button>
+                          </>
+                        )}
+                        {alert.status === 'acknowledged' && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => resolveAlert(alert.id)}
+                            disabled={isAcknowledging || isResolving}
+                          >
                             Resolve
                           </Button>
-                        </>
-                      )}
-                      {alert.status === 'acknowledged' && (
-                        <Button variant="primary" size="sm">
-                          Resolve
+                        )}
+                        <Button variant="ghost" size="sm">
+                          <Eye className="w-4 h-4" />
                         </Button>
-                      )}
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
+              </GlassCard>
+            </motion.div>
+          ))
+        ) : (
+          <GlassCard className="text-center py-12">
+            <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">No alerts found</h3>
+            <p className="text-gray-400">No alerts match your current filters.</p>
+          </GlassCard>
+        )}
       </div>
-
-      {filteredAlerts.length === 0 && (
-        <GlassCard className="text-center py-12">
-          <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No alerts found</h3>
-          <p className="text-gray-400">No alerts match your current filters.</p>
-        </GlassCard>
-      )}
     </motion.div>
   );
 };
