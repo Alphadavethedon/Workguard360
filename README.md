@@ -21,7 +21,8 @@
 ## 📌 Overview
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/YOUR_UPLOADED_IMAGE.png"
+<img width="1353" height="620" alt="image" src="https://github.com/user-attachments/assets/6dc7d42e-6769-40c6-9bb8-9173f5b20f21" />
+"
        alt="WorkGuard360 Dashboard Preview" width="900"/>
 </p>
 
