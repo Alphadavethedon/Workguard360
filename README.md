@@ -20,11 +20,6 @@
 
 ## 📌 Overview
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/YOUR-UPLOAD-ID" alt="WorkGuard360 Dashboard Preview" width="800"/>
-</p>
-
-
 **WorkGuard360** is a production-ready, **MERN-stack** enterprise-grade platform providing:
 
 * **Role-based access control**
