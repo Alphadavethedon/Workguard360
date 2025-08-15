@@ -1,4 +1,5 @@
 ---
+
 <p align="center">
 
   <img src="https://github.com/user-attachments/assets/26f9fe9e-3359-479f-9cfe-bf88a1434ec3" alt="WorkGuard360 Logo" width="180"/>
