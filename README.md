@@ -1,284 +1,293 @@
-# WorkGuard360 Backend
+---
+<p align="center">
 
-🚀 **Enterprise Workplace Compliance & Security Backend** - A world-class, production-ready Node.js backend for the WorkGuard360 platform.
+  <img src="https://github.com/user-attachments/assets/26f9fe9e-3359-479f-9cfe-bf88a1434ec3" alt="WorkGuard360 Logo" width="180"/>
 
-## 🏆 Features
+</p>
 
-### 🔐 **Authentication & Security**
-- **JWT Authentication** with access & refresh tokens
-- **Role-based Access Control (RBAC)** with granular permissions
-- **Password Hashing** with bcrypt (12 salt rounds)
-- **Account Lockout** protection against brute force attacks
-- **Rate Limiting** to prevent abuse
-- **Helmet.js** for HTTP security headers
 
-### 📊 **Core Functionality**
-- **User Management** - Complete CRUD operations with role assignment
-- **Security Alerts** - Real-time alert system with severity levels
-- **Access Logging** - Comprehensive access tracking and monitoring
-- **Report Generation** - Automated report creation with multiple formats
-- **Dashboard Analytics** - Real-time statistics and trends
+<h1 align="center">🚨 WorkGuard360 — Enterprise Workplace Security & Compliance Platform</h1>
 
-### 🚀 **Performance & Scalability**
-- **MongoDB Indexing** for optimized queries
-- **Compression Middleware** for reduced payload sizes
-- **Connection Pooling** with Mongoose
-- **Async/Await** with proper error handling
-- **Graceful Shutdown** handling
 
-### 🔄 **Real-time Features**
-- **Socket.IO Integration** for live updates
-- **Real-time Alerts** broadcasting
-- **Live Dashboard** updates
-- **Activity Feed** streaming
+**Smart Workplace Security & Compliance System**
 
-### 📈 **Monitoring & Logging**
-- **Winston Logger** with multiple transports
-- **Morgan HTTP Logging** for request tracking
-- **Health Check Endpoints** for monitoring
-- **Error Tracking** with detailed stack traces
-- **Performance Metrics** collection
+*Intelligent access monitoring, shift enforcement & real-time compliance alerts.*
 
-## 🛠 **Tech Stack**
 
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT (jsonwebtoken)
-- **Security**: Helmet, bcryptjs, express-rate-limit
-- **Real-time**: Socket.IO
-- **Logging**: Winston, Morgan
-- **Validation**: express-validator
-- **Testing**: Jest, Supertest
+[![Live Demo](https://img.shields.io/badge/Demo-Live-red?style=flat-square)](https://workguard360.vercel.app/)
 
-## 🚀 **Quick Start**
+[![GitHub](https://img.shields.io/badge/Code-GitHub-black?style=flat-square\&logo=github)](https://github.com/Alphadavethedon/Workguard360)
 
-### Prerequisites
-- Node.js 18+ installed
-- MongoDB database (local or cloud)
-- Git
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-### Installation
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=flat-square\&logo=node.js)](https://nodejs.org)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/workguard360-backend.git
-   cd workguard360-backend
-   ```
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen?style=flat-square\&logo=mongodb)](https://www.mongodb.com)
+---
+## Overview
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+**WorkGuard360** is a production-ready, **MERN-stack** enterprise-grade platform providing:
 
-3. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+* **Role-based access control**
+* **Live workplace monitoring**
+* **Shift compliance enforcement**
+* **Auto-generated audit trails**
+* **PDF & CSV compliance reports**
 
-4. **Seed the database**
-   ```bash
-   npm run seed
-   ```
+Engineered for high-security environments — scalable across Africa and globally.
 
-5. **Start the server**
-   ```bash
-   # Development
-   npm run dev
-   
-   # Production
-   npm start
-   ```
-
-## 🌍 **Environment Variables**
-
-```env
-# Server Configuration
-NODE_ENV=production
-PORT=5000
-
-# Frontend URL
-CLIENT_URL=https://workguard360.vercel.app
-
-# Database
-MONGO_URI=your_mongodb_connection_string
-
-# JWT Configuration
-JWT_SECRET=your_super_secure_jwt_secret
-JWT_EXPIRE=7d
-JWT_REFRESH_SECRET=your_refresh_token_secret
-JWT_REFRESH_EXPIRE=30d
-
-# Security
-BCRYPT_ROUNDS=12
-RATE_LIMIT_WINDOW=15
-RATE_LIMIT_MAX=100
-
-# Logging
-LOG_LEVEL=info
-```
-
-## 📚 **API Documentation**
-
-### Authentication Endpoints
-```
-POST   /api/auth/register     - Register new user
-POST   /api/auth/login        - User login
-POST   /api/auth/refresh      - Refresh access token
-GET    /api/auth/me           - Get current user
-POST   /api/auth/logout       - User logout
-POST   /api/auth/forgot-password - Request password reset
-```
-
-### User Management
-```
-GET    /api/users             - Get all users (paginated)
-GET    /api/users/:id         - Get user by ID
-POST   /api/users             - Create new user
-PUT    /api/users/:id         - Update user
-DELETE /api/users/:id         - Deactivate user
-POST   /api/users/:id/reset-password - Reset user password
-```
-
-### Security Alerts
-```
-GET    /api/alerts            - Get all alerts (filtered)
-GET    /api/alerts/:id        - Get alert by ID
-POST   /api/alerts            - Create new alert
-PATCH  /api/alerts/:id/acknowledge - Acknowledge alert
-PATCH  /api/alerts/:id/resolve - Resolve alert
-PUT    /api/alerts/:id        - Update alert
-DELETE /api/alerts/:id        - Delete alert
-```
-
-### Reports
-```
-GET    /api/reports           - Get all reports
-GET    /api/reports/:id       - Get report by ID
-POST   /api/reports/generate  - Generate new report
-GET    /api/reports/:id/download - Download report
-DELETE /api/reports/:id       - Delete report
-```
-
-### Dashboard
-```
-GET    /api/dashboard/stats           - Get dashboard statistics
-GET    /api/dashboard/recent-activity - Get recent access activity
-GET    /api/dashboard/alerts-summary  - Get alerts summary
-GET    /api/dashboard/access-trends   - Get access trends
-```
-
-### Health Check
-```
-GET    /api/health            - Basic health check
-GET    /api/health/detailed   - Detailed system health
-```
-
-## 🔐 **Security Features**
-
-### Role-Based Access Control
-- **Super Admin**: Full system access
-- **Admin**: Administrative access with most permissions
-- **Security Manager**: Security-focused access
-- **HR Manager**: Human resources access
-- **Employee**: Basic employee access
-
-### Permission System
-- Granular permissions for each resource and action
-- Dynamic permission checking middleware
-- Access level-based authorization
-
-### Security Middleware
-- CORS configuration for cross-origin requests
-- Rate limiting to prevent abuse
-- Helmet.js for HTTP security headers
-- Input validation and sanitization
-
-## 📊 **Database Schema**
-
-### Collections
-- **users** - User accounts and profiles
-- **roles** - User roles and permissions
-- **permissions** - System permissions
-- **alerts** - Security alerts and incidents
-- **accesslogs** - Access tracking records
-- **reports** - Generated reports
-
-### Indexes
-- Optimized indexes for frequently queried fields
-- Compound indexes for complex queries
-- Text indexes for search functionality
-
-## 🧪 **Testing**
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## 📦 **Deployment**
-
-### Render Deployment
-1. Connect your GitHub repository to Render
-2. Set environment variables in Render dashboard
-3. Deploy automatically on git push
-
-### Docker Deployment
-```bash
-# Build image
-docker build -t workguard360-backend .
-
-# Run container
-docker run -p 5000:5000 --env-file .env workguard360-backend
-```
-
-## 🔧 **Development**
-
-### Project Structure
-```
-├── models/           # Mongoose models
-├── routes/           # Express routes
-├── middleware/       # Custom middleware
-├── utils/           # Utility functions
-├── scripts/         # Database scripts
-├── logs/            # Log files
-├── tests/           # Test files
-└── server.js        # Main server file
-```
-
-### Code Style
-- ESLint configuration for consistent code style
-- Prettier for code formatting
-- Husky for pre-commit hooks
-
-## 🤝 **Contributing**
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 **Support**
-
-For support and questions:
-- Create an issue on GitHub
-- Email: support@workguard360.com
-- Documentation: [docs.workguard360.com](https://docs.workguard360.com)
+> Built in Nairobi. Architected for enterprise scale.
 
 ---
 
-**Built with ❤️ for enterprise workplace security and compliance**
+## System Architecture
 
-🏆 **Ready for hackathons, production, and global scale!**
+```mermaid
+
+flowchart TD
+
+    A[Frontend - React/Vite/Tailwind] -->|HTTPS| B[Backend API - Express.js]
+
+    B -->|JWT Auth| C[Auth Controller]
+
+    B -->|CRUD Operations| D[MongoDB + Mongoose]
+
+    B -->|PDF/CSV Export| E[Reporting Service]
+
+    B -->|Alert Webhooks| F[Notification Service - Twilio/SendGrid]
+
+    B -->|WebSocket| G[Real-Time Monitoring]
+
+```
+
+---
+
+## Core Features
+
+### Authentication & Access Control
+
+* JWT-secured login
+* Role-specific dashboards (**Admin**, **HR**, **Security**)
+* Protected API routes with granular permissions
+
+### Real-Time Compliance Monitoring
+
+* Live event stream ingestion
+* Unauthorized floor & shift timing violation detection
+* Alert feed with resolution workflow
+
+### Shift, Floor & Access Management
+
+* Shift scheduling
+* Floor-to-role mapping
+* Role-based access enforcement
+
+### Alert Center
+
+* Auto-generation of violations
+* Archive / resolve/escalate
+* Filter by **role**, **status**, or **time**
+
+### Advanced Reporting
+
+* Weekly PDF/CSV reports (PDFKit & json2csv)
+* Custom date/role/floor exports
+* Immutable audit trail storage
+
+---
+
+## Live Demo Access
+
+| Role     | Email                                                         | Password    |
+
+| -------- | ------------------------------------------------------------- | ----------- |
+
+| Admin    | [admin@workguard360.com](mailto:admin@workguard360.com)       | demo123     |
+
+| HR       | [hr@workguard360.com](mailto:hr@workguard360.com)             | hr123       |
+
+| Security | [security@workguard360.com](mailto:security@workguard360.com) | security123 |
+
+---
+
+## Tech Stack
+
+| Layer         | Technologies                                |
+
+| ------------- | ------------------------------------------- |
+
+| **Frontend**  | React, Vite, Tailwind CSS, Framer Motion    |
+
+| **Backend**   | Node.js, Express.js, MongoDB, Mongoose, JWT |
+
+| **Dev Tools** | React Query, Axios, Zod, React Hook Form    |
+
+| **Reporting** | PDFKit, json2csv                            |
+
+| **Testing**   | Jest, Supertest, React Testing Library      |
+
+| **CI/CD**     | GitHub Actions                              |
+
+| **Deploy**    | Vercel (Frontend), Render (Backend)         |
+
+---
+
+## Installation
+
+```bash
+
+# Clone repo
+
+git clone https://github.com/Alphadavethedon/Workguard360.git
+
+cd Workguard360
+
+
+# Install frontend
+
+cd client && npm install
+
+
+# Install backend
+
+cd ../server && npm install
+
+```
+
+---
+
+## ⚙️ Environment Variables
+
+**`client/.env`**
+
+```env
+
+VITE_API_URL=http://localhost:5000/api
+
+```
+
+**`server/.env`**
+
+```env
+
+PORT=5000
+
+MONGO_URI=your_mongo_connection_string
+
+JWT_SECRET=your_jwt_secret_key
+
+```
+
+---
+
+## ▶️ Running Locally
+
+```bash
+
+# Start backend
+
+cd server
+
+npm run dev
+
+
+# Start frontend
+
+cd ../client
+
+npm run dev
+
+```
+
+---
+
+## Deployment
+
+### Vercel (Frontend)
+
+```bash
+
+vercel --prod
+
+```
+
+### Render (Backend)
+
+* Connect your GitHub repo
+* Add `MONGO_URI` & `JWT_SECRET` in environment variables
+* Build command: `npm install`
+* Start command: `node server.js`
+
+### Docker (Full Stack)
+
+```bash
+
+docker-compose up --build
+
+```
+
+---
+
+## Testing
+
+```bash
+
+# Backend tests
+
+cd server && npm test
+
+
+# Frontend tests
+
+cd client && npm test
+
+```
+
+---
+
+## API Documentation
+
+API reference available at:
+
+`https://workguard360-backend.render.com/api/docs` *(Swagger auto-generated)*
+
+---
+
+## Security Notes
+
+* **JWT** tokens signed with 256-bit secret
+* MongoDB indexes for fast role-based lookups
+* Rate limiting & request sanitization middleware
+* Helmet & CORS protection enabled by default
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a new branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: add new feature'`
+4. Push: `git push origin feature/your-feature`
+5. Submit PR
+
+---
+
+## License
+
+MIT — free to use, modify, and distribute.
+
+---
+
+## Author
+
+**Davis Wabwile**
+
+Full-Stack Developer · Cloud & AI Engineer
+
+📍 Nairobi, Kenya
+
+📧 [daviswabwile@gmail.com](mailto:daviswabwile@gmail.com)
+
+🌐 [Portfolio](https://davisportfolio.vercel.app)
+
+---
