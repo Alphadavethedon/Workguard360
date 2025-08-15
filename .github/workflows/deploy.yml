@@ -1,0 +1,69 @@
+name: WorkGuard360 CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  frontend:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd client
+          npm run build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v21
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./client
+          prod: true
+
+  backend:
+    name: Deploy Backend to Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run backend tests
+        run: |
+          cd server
+          npm test
+
+      - name: Deploy Backend (via Render CLI)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          render services update --id <your-render-service-id> --branch main
