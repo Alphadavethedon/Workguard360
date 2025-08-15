@@ -244,7 +244,7 @@ const LandingPage: React.FC = () => {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.2),_transparent_70%)] -z-10" />
               <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tighter mb-4">Secure the Future of Your Enterprise</h2>
               <p className="text-base sm:text-lg text-indigo-100/90 mb-6 max-w-md mx-auto">
-                Born in a hackathon, engineered for enterprises. Join the revolution in security, monitoring, and compliance.
+                Engineered for enterprises. Join the revolution in security, monitoring, and compliance.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link to="/login">
