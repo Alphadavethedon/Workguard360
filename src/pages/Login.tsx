@@ -45,7 +45,12 @@ const Login: React.FC = () => {
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.35),_transparent_60%)] opacity-60" />
         <div className="relative z-10 flex flex-col justify-center px-12">
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.4 }} className="mb-8">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="mb-8"
+          >
             <div className="flex items-center space-x-4 mb-6">
               <div className="w-12 h-12 bg-[conic-gradient(at_top_left,_var(--tw-gradient-stops))] from-indigo-600 via-cyan-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
@@ -68,7 +73,12 @@ const Login: React.FC = () => {
             </p>
           </motion.div>
 
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5, duration: 0.4 }} className="space-y-3">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="space-y-3"
+          >
             {['Threat Detection', '24/7 Monitoring', 'Automated Compliance', 'Dynamic Access Control'].map((item, idx) => (
               <div key={idx} className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
@@ -105,7 +115,12 @@ const Login: React.FC = () => {
 
             {/* Error */}
             {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-6 p-3 bg-rose-500/20 border border-rose-500/30 rounded-lg flex items-center space-x-2">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 p-3 bg-rose-500/20 border border-rose-500/30 rounded-lg flex items-center space-x-2"
+              >
                 <AlertCircle className="w-4 h-4 text-rose-400" />
                 <span className="text-rose-400 text-sm">{error}</span>
               </motion.div>
@@ -115,35 +130,63 @@ const Login: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-indigo-200 mb-1">Email Address</label>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-indigo-200 mb-1"
+                >
+                  Email Address
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-300 w-5 h-5" />
                   <input
                     {...register('email')}
                     type="email"
+                    id="email"
+                    name="email"
+                    autoComplete="username"
                     className="w-full pl-10 pr-4 py-3 bg-black/50 border border-indigo-700/50 rounded-lg text-white placeholder-indigo-300/50 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                     placeholder="Enter your email"
                   />
                 </div>
-                {errors.email && <p className="text-rose-400 text-xs mt-1">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="text-rose-400 text-xs mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-indigo-200 mb-1">Password</label>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-indigo-200 mb-1"
+                >
+                  Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-300 w-5 h-5" />
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-12 py-3 bg-black/50 border border-indigo-700/50 rounded-lg text-white placeholder-indigo-300/50 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                     placeholder="Enter your password"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-300 hover:text-white transition-colors">
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-300 hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                {errors.password && <p className="text-rose-400 text-xs mt-1">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-rose-400 text-xs mt-1">{errors.password.message}</p>
+                )}
               </div>
 
               {/* Submit */}
@@ -153,7 +196,11 @@ const Login: React.FC = () => {
                 className="w-full text-base px-6 py-3 bg-[linear-gradient(45deg,#6366f1,#22d3ee)] hover:opacity-85 shadow-lg shadow-indigo-600/50 flex justify-center items-center"
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingSpinner size="sm" className="mr-2" /> : <ArrowRight className="w-4 h-4 mr-2" />}
+                {isLoading ? (
+                  <LoadingSpinner size="sm" className="mr-2" />
+                ) : (
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                )}
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
