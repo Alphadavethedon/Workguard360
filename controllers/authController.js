@@ -1,61 +1,37 @@
-const jwt = require('jsonwebtoken');
+// controllers/authController.js  (example)
+const User = require('../models/User'); // adjust to your actual model import
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
-};
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-const login = async (req, res, next) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Missing credentials' });
 
-    if (!email || !password) {
-      res.status(400);
-      return next(new Error('Please provide email and password'));
-    }
+    const user = await User.findOne({ email }).lean();
+    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
 
-    const user = await User.findOne({ email });
+    // if stored password hash exists:
+    const match = await bcrypt.compare(password, user.password || '');
+    if (!match) return res.status(401).json({ message: 'Invalid email or password' });
 
-    if (!user) {
-      res.status(401);
-      return next(new Error('Invalid credentials'));
-    }
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '30d' });
+    const refreshToken = ''; // generate if you support refresh tokens
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      res.status(401);
-      return next(new Error('Invalid credentials'));
-    }
-
-    res.status(200).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user.id),
+    // return canonical payload
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        // include other safe user fields as needed (avoid sensitive data)
+      },
+      token,
+      refreshToken,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
-
-// @desc    Get current logged-in user
-// @route   GET /api/auth/me
-// @access  Private
-const getMe = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    res.status(200).json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = { login, getMe };
