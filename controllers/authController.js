@@ -1,74 +1,47 @@
-'use strict';
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/User'); // Your user model
 
-// helper to sign JWTs safely
-function signAccessToken(payload, expiresIn = process.env.JWT_EXPIRE || '30d') {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET missing');
-  return jwt.sign(payload, secret, { expiresIn });
-}
-
-/**
- * POST /api/auth/login
- * Body: { email, password }
- */
-exports.login = async (req, res, next) => {
+exports.login = async (req, res) => {
   try {
-    const { email = '', password = '' } = req.body || {};
+    const { email, password } = req.body;
+
+    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: 'Missing credentials' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
-    const ok = await bcrypt.compare(password, user.password || '');
-    if (!ok) return res.status(401).json({ message: 'Invalid email or password' });
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
-    const token = signAccessToken({ id: user._id.toString() });
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
-    // build safe user payload
-    const safeUser = {
-      id: user._id,
-      email: user.email,
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      role: user.role || 'user',
-    };
+    return res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name
+      }
+    });
 
-    return res.status(200).json({ user: safeUser, token });
-  } catch (err) {
-    return next(err);
-  }
-};
-
-/**
- * GET /api/auth/me
- * Requires Authorization: Bearer <token>
- * Returns the current user's safe profile
- */
-exports.getMe = async (req, res, next) => {
-  try {
-    // set by auth middleware
-    const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-    const user = await User.findById(userId).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const safeUser = {
-      id: user._id,
-      email: user.email,
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      role: user.role || 'user',
-    };
-
-    return res.status(200).json({ user: safeUser });
-  } catch (err) {
-    return next(err);
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
