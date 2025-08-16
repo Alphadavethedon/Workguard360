@@ -3,84 +3,67 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const morgan = require('morgan');
-const cors = require('cors');
 const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const logger = require('./utils/logger');
 
 dotenv.config();
 
-const logger = require('./utils/logger');
-const errorHandler = require('./middleware/errorHandler');
-
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users'); // keep if you have it
+const usersRoutes = require('./routes/users'); // optional placeholder
 
 const app = express();
 
-// Body parsing & limits
 app.use(express.json({ limit: '10kb' }));
-
-// Security
 app.use(helmet());
-
-// CORS (restrict to your frontend)
+app.use(compression());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'https://workguard360.vercel.app',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
+    optionsSuccessStatus: 200,
   })
 );
 
-// Dev request logging
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
-
-// DB connect with retry
-(async function connectDB(retries = 5) {
+// connect to MongoDB with simple retry
+(async function connect(retries = 5) {
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    logger.error('MONGO_URI missing');
+    process.exit(1);
+  }
   while (retries) {
     try {
-      const uri = process.env.MONGO_URI;
-      if (!uri) throw new Error('MONGO_URI missing');
-
-      await mongoose.connect(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      logger.info('✅ MongoDB Connected');
+      await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+      logger.info('✅ MongoDB connected');
       break;
     } catch (err) {
-      logger.error(`❌ MongoDB connection error: ${err.message}`);
+      logger.error('Mongo connect error:', err.message);
       retries -= 1;
       if (!retries) process.exit(1);
-      logger.info(`🔄 Retrying MongoDB connection (${retries} left)...`);
-      await new Promise((r) => setTimeout(r, 5000));
+      await new Promise((r) => setTimeout(r, 3000));
     }
   }
 })();
 
-// Health route (prevents "Cannot GET /")
-app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'WorkGuard360 Backend',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
+// health root
+app.get('/', (req, res) =>
+  res.json({ status: 'ok', service: 'WorkGuard360 Backend', uptime: process.uptime() })
+);
 
-// API routes
+// API
 app.use('/api/auth', authRoutes);
-if (userRoutes) app.use('/api/users', userRoutes);
+if (usersRoutes) app.use('/api/users', usersRoutes);
 
-// 404 for unknown API routes
-app.all('/api/*', (req, res) => {
-  res.status(404).json({ success: false, message: 'API route not found' });
+// 404 for unknown API
+app.all('/api/*', (req, res) => res.status(404).json({ success: false, message: 'API route not found' }));
+
+// simple error handler
+app.use((err, req, res, next) => {
+  logger.error(err.stack || err.message || err);
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Server error' });
 });
 
-// Centralized error handler
-app.use(errorHandler);
-
-// Start
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`));
+app.listen(PORT, () => logger.info(`🚀 Server running on port ${PORT}`));
