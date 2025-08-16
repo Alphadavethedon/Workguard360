@@ -1,16 +1,7 @@
-const { createLogger, format, transports } = require('winston');
+'use strict';
 
-const logger = createLogger({
-  level: 'info',
-  format: format.combine(
-    format.colorize(),
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.printf(info => `${info.timestamp} [${info.level}]: ${info.message}`)
-  ),
-  transports: [
-    new transports.Console()
-  ]
-});
-
-module.exports = logger;
-
+module.exports = {
+  info: (...args) => console.log('[INFO]', ...args),
+  error: (...args) => console.error('[ERROR]', ...args),
+  warn: (...args) => console.warn('[WARN]', ...args),
+};
