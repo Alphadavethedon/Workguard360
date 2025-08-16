@@ -1,47 +1,46 @@
+// controllers/authController.js
+'use strict';
+
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Your user model
 
-exports.login = async (req, res) => {
+function signToken(payload, expiresIn = process.env.JWT_EXPIRE || '30d') {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET not set');
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+}
+
+exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email = '', password = '' } = req.body || {};
+    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
+    const ok = await bcrypt.compare(password, user.password || '');
+    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
+    const token = signToken({ id: user._id.toString() });
 
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
+    const safeUser = { id: user._id, email: user.email, firstName: user.firstName || '', lastName: user.lastName || '', role: user.role || 'user' };
+    return res.status(200).json({ user: safeUser, token });
+  } catch (err) {
+    return next(err);
+  }
+};
 
-    return res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name
-      }
-    });
+exports.getMe = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-  } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    const user = await User.findById(userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const safeUser = { id: user._id, email: user.email, firstName: user.firstName || '', lastName: user.lastName || '', role: user.role || 'user' };
+    return res.status(200).json({ user: safeUser });
+  } catch (err) {
+    return next(err);
   }
 };
