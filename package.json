@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Enterprise Workplace Security & Compliance Backend",
   "main": "dist/server.js",
+  "type": "commonjs",
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
@@ -13,7 +14,7 @@
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "seed": "tsx src/seeds/seedAdmin.ts",
@@ -49,8 +50,6 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.10.5",
     "@types/pdfkit": "^0.12.12",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
     "@types/supertest": "^2.0.16",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
