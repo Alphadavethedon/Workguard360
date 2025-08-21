@@ -38,9 +38,8 @@
     "socket.io": "^4.7.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
+    "zod": "^3.22.4",
+
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
@@ -52,7 +51,9 @@
     "@types/pdfkit": "^0.12.12",
     "@types/supertest": "^2.0.16",
     "@types/swagger-jsdoc": "^6.0.4",
-    "@types/swagger-ui-express": "^4.1.6",
+    "@types/swagger-ui-express": "^4.1.6"
+  },
+  "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
@@ -70,6 +71,6 @@
     "workplace",
     "monitoring"
   ],
-  "author": "WorkGuard360 Team",
+  "author": "Davis Wabwile",
   "license": "MIT"
 }
